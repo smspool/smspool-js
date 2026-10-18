@@ -12,6 +12,9 @@ data["author"] = "SMSPool (https://www.smspool.net)"
 data["keywords"] = ["smspool", "sms", "sms-verification", "otp", "phone-verification", "api", "sdk", "typescript"]
 data["homepage"] = "https://api.smspool.net/docs"
 data["bugs"] = {"url": "https://github.com/smspool/smspool-js/issues"}
+# Ship only the build; without this npm would pack the whole repo
+# (workflows, scripts, the TypeScript sources).
+data["files"] = ["dist"]
 with open(path, "w") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write("\n")
