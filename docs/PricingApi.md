@@ -21,11 +21,11 @@ Retrieve specific price &amp; Success Rate
 import {
   Configuration,
   PricingApi,
-} from 'smspool-sdk';
-import type { RequestPriceRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestPriceRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new PricingApi();
 
   const body = {
@@ -96,11 +96,11 @@ Retrieve all pricing
 import {
   Configuration,
   PricingApi,
-} from 'smspool-sdk';
-import type { RequestPricingRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestPricingRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new PricingApi();
 
   const body = {

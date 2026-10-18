@@ -24,11 +24,11 @@ Cancel
 import {
   Configuration,
   PreordersApi,
-} from 'smspool-sdk';
-import type { PreorderCancelRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PreorderCancelRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -96,11 +96,11 @@ Check
 import {
   Configuration,
   PreordersApi,
-} from 'smspool-sdk';
-import type { PreorderCheckRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PreorderCheckRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -168,11 +168,11 @@ Create
 import {
   Configuration,
   PreordersApi,
-} from 'smspool-sdk';
-import type { PreorderCreateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PreorderCreateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -252,11 +252,11 @@ Price
 import {
   Configuration,
   PreordersApi,
-} from 'smspool-sdk';
-import type { PreorderPriceRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PreorderPriceRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -331,11 +331,11 @@ This API endpoint allows you to retrieve preorders from the SMS Pool system. It 
 import {
   Configuration,
   PreordersApi,
-} from 'smspool-sdk';
-import type { PreorderRetrieveRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PreorderRetrieveRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",

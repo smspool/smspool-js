@@ -22,11 +22,11 @@ This API endpoint is used to perform a paid lookup for a phone number. The reque
 import {
   Configuration,
   CarrierApi,
-} from 'smspool-sdk';
-import type { CarrierPaidLookupRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { CarrierPaidLookupRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",

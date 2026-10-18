@@ -1,4 +1,4 @@
-import { Configuration, InformationApi, ResponseError } from "smspool-sdk";
+import { Configuration, InformationApi, ResponseError } from "@smspool/sdk";
 
 const api = new InformationApi(new Configuration({ basePath: "https://api.smspool.net" }));
 const countries = await api.countryRetrieveAll();

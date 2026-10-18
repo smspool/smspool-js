@@ -23,11 +23,11 @@ Bulk generate vouchers
 import {
   Configuration,
   VoucherApi,
-} from 'smspool-sdk';
-import type { VoucherBulkGenerateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { VoucherBulkGenerateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -97,11 +97,11 @@ Delete voucher
 import {
   Configuration,
   VoucherApi,
-} from 'smspool-sdk';
-import type { VoucherDeleteRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { VoucherDeleteRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -168,11 +168,11 @@ Generate voucher
 import {
   Configuration,
   VoucherApi,
-} from 'smspool-sdk';
-import type { VoucherGenerateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { VoucherGenerateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -239,11 +239,11 @@ Retrieve vouchers
 import {
   Configuration,
   VoucherApi,
-} from 'smspool-sdk';
-import type { VoucherRetrieveRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { VoucherRetrieveRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",

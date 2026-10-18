@@ -28,11 +28,11 @@ This API endpoint is used to retrieve the full country list for SMSPool requests
 import {
   Configuration,
   InformationApi,
-} from 'smspool-sdk';
-import type { CountryRetrieveAllRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { CountryRetrieveAllRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new InformationApi();
 
   const body = {
@@ -95,11 +95,11 @@ This API endpoint is used to retrieve a list of our active pools for SMSPool req
 import {
   Configuration,
   InformationApi,
-} from 'smspool-sdk';
-import type { PoolRetrieveAllRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PoolRetrieveAllRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new InformationApi();
 
   try {
@@ -154,11 +154,11 @@ This API endpoint is used to retrieve suggested pools for SMSPool requests. It s
 import {
   Configuration,
   InformationApi,
-} from 'smspool-sdk';
-import type { PoolRetrieveValidRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PoolRetrieveValidRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new InformationApi();
 
   const body = {
@@ -231,11 +231,11 @@ This HTTP POST request is used to retrieve the balance for a specific SMSPool. T
 import {
   Configuration,
   InformationApi,
-} from 'smspool-sdk';
-import type { RequestBalanceRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestBalanceRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -297,11 +297,11 @@ This API endpoint is used to retrieve success per country for SMSPool requests. 
 import {
   Configuration,
   InformationApi,
-} from 'smspool-sdk';
-import type { RequestSuccessRateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestSuccessRateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new InformationApi();
 
   const body = {
@@ -368,11 +368,11 @@ This API endpoint is used to retrieve suggested countries for SMS pool requests.
 import {
   Configuration,
   InformationApi,
-} from 'smspool-sdk';
-import type { RequestSuggestedCountriesRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestSuggestedCountriesRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new InformationApi();
 
   const body = {
@@ -436,11 +436,11 @@ This API endpoint is used to retrieve the full service list for SMSPool requests
 import {
   Configuration,
   InformationApi,
-} from 'smspool-sdk';
-import type { ServiceRetrieveAllRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { ServiceRetrieveAllRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new InformationApi();
 
   const body = {

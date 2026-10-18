@@ -36,11 +36,11 @@ Order SMS
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { PurchaseSmsRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PurchaseSmsRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -146,11 +146,11 @@ The recommended endpoint to retrieve your current active orders, this will displ
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { RequestActiveRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestActiveRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -211,11 +211,11 @@ This API endpoint is used to archive a request in the SMS Pool system. The HTTP 
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { RequestArchiveRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestArchiveRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -274,11 +274,11 @@ Request available areacodes
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { RequestAreacodesRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestAreacodesRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new SMSApi();
 
   const body = {
@@ -347,11 +347,11 @@ This API endpoint is used to retrieve the history of SMS requests. It is an HTTP
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { RequestHistoryRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RequestHistoryRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -426,11 +426,11 @@ This endpoint will forcefully activate an SMS to set it available for future res
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsActivateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsActivateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -501,11 +501,11 @@ This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. 
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsAllStockRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsAllStockRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new SMSApi();
 
   const body = {
@@ -574,11 +574,11 @@ Cancel SMS
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsCancelRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsCancelRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -658,11 +658,11 @@ Cancel All SMS
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsCancelAllRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsCancelAllRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -723,11 +723,11 @@ You may run into ratelimits while using this endpoint for high rate requests, we
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsCheckRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsCheckRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -796,11 +796,11 @@ Check if the order can be resent or not.
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsCheckResendRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsCheckResendRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -871,11 +871,11 @@ Clear SMS Cache
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsClearCacheRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsClearCacheRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -936,11 +936,11 @@ Some messages arrive on a number from your one-time orders but cannot finish the
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsMissedRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsMissedRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -1012,11 +1012,11 @@ This endpoint will reactivate an order, please keep in mind that these orders ar
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsReactivateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsReactivateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -1085,11 +1085,11 @@ Resend
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsResendRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsResendRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -1160,11 +1160,11 @@ This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. 
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsStockRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsStockRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new SMSApi();
 
   const body = {
@@ -1236,11 +1236,11 @@ Move an archived order back to your active orders, so it shows up in **Active or
 import {
   Configuration,
   SMSApi,
-} from 'smspool-sdk';
-import type { SmsUnarchiveRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { SmsUnarchiveRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",

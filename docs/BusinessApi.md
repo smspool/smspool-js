@@ -23,11 +23,11 @@ Register user
 import {
   Configuration,
   BusinessApi,
-} from 'smspool-sdk';
-import type { BusinessCreateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { BusinessCreateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -101,11 +101,11 @@ History
 import {
   Configuration,
   BusinessApi,
-} from 'smspool-sdk';
-import type { BusinessUserHistoryRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { BusinessUserHistoryRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -173,11 +173,11 @@ Update
 import {
   Configuration,
   BusinessApi,
-} from 'smspool-sdk';
-import type { BusinessUserUpdateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { BusinessUserUpdateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -257,11 +257,11 @@ Retrieve users
 import {
   Configuration,
   BusinessApi,
-} from 'smspool-sdk';
-import type { BusinessUsersRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { BusinessUsersRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",

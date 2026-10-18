@@ -3,12 +3,12 @@
 Official JavaScript / TypeScript client for the [SMSPool API](https://api.smspool.net/docs): one-time SMS
 verification numbers, rentals, pre-orders, eSIMs and more.
 
-Package: [`smspool-sdk`](https://www.npmjs.com/package/smspool-sdk) on npm.
+Package: [`@smspool/sdk`](https://www.npmjs.com/package/@smspool/sdk) on npm.
 
 ## Install
 
 ```bash
-npm install smspool-sdk
+npm install @smspool/sdk
 ```
 
 ## Quick start
@@ -16,7 +16,7 @@ npm install smspool-sdk
 Get your API key from [your settings page](https://www.smspool.net/my/settings).
 
 ```ts
-import { Configuration, InformationApi, SMSApi } from "smspool-sdk";
+import { Configuration, InformationApi, SMSApi } from "@smspool/sdk";
 
 const config = new Configuration({ accessToken: "YOUR_API_KEY" });
 console.log(await new InformationApi(config).requestBalance());
@@ -53,7 +53,7 @@ Hand-written files are listed in `.openapi-generator-ignore`.
 3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
 The Release workflow checks the tag against the version, runs the smoke test and publishes.
-Publishing needs the `NPM_TOKEN` secret (an npm granular access token for `smspool-sdk`).
+Publishing needs the `NPM_TOKEN` secret (an npm granular access token with publish access to the `@smspool` scope).
 
 ## License
 

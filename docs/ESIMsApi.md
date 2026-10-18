@@ -28,11 +28,11 @@ Delete eSIM
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimDeleteRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimDeleteRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -99,11 +99,11 @@ View eSIM history
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimHistoryRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimHistoryRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -178,11 +178,11 @@ Set or clear the label of one of your eSIMs. The label is returned as &#x60;labe
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimLabelUpdateRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimLabelUpdateRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -252,11 +252,11 @@ View eSIM plans per country
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimPlansRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimPlansRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -323,11 +323,11 @@ View eSIM countries
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimPricingRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimPricingRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -400,11 +400,11 @@ View eSIM profile
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimProfileRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimProfileRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -471,11 +471,11 @@ Purchase eSIM
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimPurchaseRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimPurchaseRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -542,11 +542,11 @@ Top up eSIM
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimTopupRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimTopupRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -616,11 +616,11 @@ Top Up Plans
 import {
   Configuration,
   ESIMsApi,
-} from 'smspool-sdk';
-import type { EsimTopupPlansRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { EsimTopupPlansRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new ESIMsApi();
 
   const body = {

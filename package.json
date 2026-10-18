@@ -1,6 +1,6 @@
 {
-  "name": "smspool-sdk",
-  "version": "0.1.1",
+  "name": "@smspool/sdk",
+  "version": "0.1.2",
   "description": "Official JavaScript and TypeScript client for the SMSPool API: SMS verification numbers, rentals, pre-orders and eSIMs.",
   "author": "SMSPool (https://www.smspool.net)",
   "repository": {

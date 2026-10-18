@@ -35,11 +35,11 @@ Order Rental
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { PurchaseRentalRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { PurchaseRentalRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -125,11 +125,11 @@ Enable Auto Extend Rental
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalAutoExtendRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalAutoExtendRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -196,11 +196,11 @@ Extend Rental
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalExtendRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalExtendRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -273,11 +273,11 @@ Retrieve a history of all your rental actions.
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalHistoryRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalHistoryRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -338,11 +338,11 @@ Retrieve rental information
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalInfoRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalInfoRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -410,11 +410,11 @@ Refund Rental
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalRefundRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalRefundRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -482,11 +482,11 @@ Reset Rental
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalResetRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalResetRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -557,11 +557,11 @@ Retrieve a history of all your rental actions.
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalRetrieveRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalRetrieveRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -622,11 +622,11 @@ Retrieve available rental products. Each listing includes &#x60;is_refundable&#x
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalRetrieveAllRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalRetrieveAllRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new RentalApi();
 
   const body = {
@@ -690,11 +690,11 @@ List every rental on your account that was not refunded, including expired ones.
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalRetrieveHistoryRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalRetrieveHistoryRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -753,11 +753,11 @@ Retrieve Rental Messages
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalRetrieveMessagesRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalRetrieveMessagesRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -825,11 +825,11 @@ Retrieve Rental Pricing
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalRetrievePricingRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalRetrievePricingRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new RentalApi();
 
   const body = {
@@ -893,11 +893,11 @@ Retrieve Rental Services
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalRetrieveServicesRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalRetrieveServicesRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new RentalApi();
 
   const body = {
@@ -958,11 +958,11 @@ Retrieve Rental Status
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalRetrieveStatusRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalRetrieveStatusRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -1032,11 +1032,11 @@ Some rentals are bound to a single service. This returns the price of a rental f
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalServicePriceRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalServicePriceRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const config = new Configuration({ 
     // Configure HTTP bearer authorization: bearerAuth
     accessToken: "YOUR BEARER TOKEN",
@@ -1106,11 +1106,11 @@ Retrieve Rental Stock
 import {
   Configuration,
   RentalApi,
-} from 'smspool-sdk';
-import type { RentalStockRequest } from 'smspool-sdk';
+} from '@smspool/sdk';
+import type { RentalStockRequest } from '@smspool/sdk';
 
 async function example() {
-  console.log("🚀 Testing smspool-sdk SDK...");
+  console.log("🚀 Testing @smspool/sdk SDK...");
   const api = new RentalApi();
 
   const body = {
