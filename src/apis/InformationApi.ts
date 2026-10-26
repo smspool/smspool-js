@@ -40,6 +40,21 @@ export interface PoolRetrieveValidRequest {
     includeStock?: string;
 }
 
+export interface RequestHistorySearchRequest {
+    /**
+     * 
+     */
+    search: string;
+    /**
+     * 
+     */
+    cursor?: string;
+    /**
+     * 
+     */
+    limit?: number;
+}
+
 export interface RequestSuccessRateRequest {
     /**
      * Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
@@ -169,6 +184,34 @@ export interface InformationApiInterface {
      * Balance
      */
     requestBalance(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
+
+    /**
+     * Creates request options for requestHistorySearch without sending the request
+     * @param {string} search 
+     * @param {string} [cursor] 
+     * @param {number} [limit] 
+     * @throws {RequiredError}
+     * @memberof InformationApiInterface
+     */
+    requestHistorySearchRequestOpts(requestParameters: RequestHistorySearchRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * @summary History search
+     * @param {string} search 
+     * @param {string} [cursor] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof InformationApiInterface
+     */
+    requestHistorySearchRaw(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * History search
+     */
+    requestHistorySearch(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
     /**
      * Creates request options for requestSuccessRate without sending the request
@@ -477,6 +520,91 @@ export class InformationApi extends runtime.BaseAPI implements InformationApiInt
      */
     async requestBalance(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
         const response = await this.requestBalanceRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for requestHistorySearch without sending the request
+     */
+    async requestHistorySearchRequestOpts(requestParameters: RequestHistorySearchRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['search'] == null) {
+            throw new runtime.RequiredError(
+                'search',
+                'Required parameter "search" was null or undefined when calling requestHistorySearch().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const consumes: runtime.Consume[] = [
+            { contentType: 'application/x-www-form-urlencoded' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['search'] != null) {
+            formParams.append('search', requestParameters['search'] as any);
+        }
+
+        if (requestParameters['cursor'] != null) {
+            formParams.append('cursor', requestParameters['cursor'] as any);
+        }
+
+        if (requestParameters['limit'] != null) {
+            formParams.append('limit', requestParameters['limit'] as any);
+        }
+
+
+        let urlPath = `/request/history_search`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * History search
+     */
+    async requestHistorySearchRaw(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.requestHistorySearchRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * History search
+     */
+    async requestHistorySearch(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.requestHistorySearchRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

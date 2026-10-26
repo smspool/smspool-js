@@ -11,6 +11,7 @@ All URIs are relative to *https://api.smspool.net*
 | [**requestHistory**](SMSApi.md#requesthistory) | **POST** /request/history | Order History |
 | [**smsActivate**](SMSApi.md#smsactivate) | **POST** /sms/activate | Activate SMS |
 | [**smsAllStock**](SMSApi.md#smsallstock) | **POST** /sms/all_stock | One-time stock for all services |
+| [**smsArchive**](SMSApi.md#smsarchive) | **POST** /sms/archive | Archive |
 | [**smsCancel**](SMSApi.md#smscancel) | **POST** /sms/cancel | Cancel SMS |
 | [**smsCancelAll**](SMSApi.md#smscancelall) | **POST** /sms/cancel_all | Cancel All SMS |
 | [**smsCheck**](SMSApi.md#smscheck) | **POST** /sms/check | Check SMS |
@@ -556,6 +557,79 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## smsArchive
+
+> any smsArchive(orderid)
+
+Archive
+
+_Not documented yet: the parameters below come straight from the code._
+
+### Example
+
+```ts
+import {
+  Configuration,
+  SMSApi,
+} from '@smspool/sdk';
+import type { SmsArchiveRequest } from '@smspool/sdk';
+
+async function example() {
+  console.log("🚀 Testing @smspool/sdk SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new SMSApi(config);
+
+  const body = {
+    // string
+    orderid: orderid_example,
+  } satisfies SmsArchiveRequest;
+
+  try {
+    const data = await api.smsArchive(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **orderid** | `string` |  | [Defaults to `undefined`] |
+
+### Return type
+
+**any**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: `application/x-www-form-urlencoded`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | JSON response |  -  |
+| **401** | Malformed API key |  -  |
+| **403** | Unknown or revoked API key |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
