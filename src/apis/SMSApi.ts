@@ -121,6 +121,13 @@ export interface SmsAllStockRequest {
     pool?: string;
 }
 
+export interface SmsArchiveRequest {
+    /**
+     * 
+     */
+    orderid: string;
+}
+
 export interface SmsCancelRequest {
     /**
      * 
@@ -409,6 +416,30 @@ export interface SMSApiInterface {
      * One-time stock for all services
      */
     smsAllStock(requestParameters: SmsAllStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
+
+    /**
+     * Creates request options for smsArchive without sending the request
+     * @param {string} orderid 
+     * @throws {RequiredError}
+     * @memberof SMSApiInterface
+     */
+    smsArchiveRequestOpts(requestParameters: SmsArchiveRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * @summary Archive
+     * @param {string} orderid 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SMSApiInterface
+     */
+    smsArchiveRaw(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * Archive
+     */
+    smsArchive(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
     /**
      * Creates request options for smsCancel without sending the request
@@ -1203,6 +1234,83 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
      */
     async smsAllStock(requestParameters: SmsAllStockRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
         const response = await this.smsAllStockRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for smsArchive without sending the request
+     */
+    async smsArchiveRequestOpts(requestParameters: SmsArchiveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['orderid'] == null) {
+            throw new runtime.RequiredError(
+                'orderid',
+                'Required parameter "orderid" was null or undefined when calling smsArchive().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const consumes: runtime.Consume[] = [
+            { contentType: 'application/x-www-form-urlencoded' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['orderid'] != null) {
+            formParams.append('orderid', requestParameters['orderid'] as any);
+        }
+
+
+        let urlPath = `/sms/archive`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * Archive
+     */
+    async smsArchiveRaw(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.smsArchiveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * Archive
+     */
+    async smsArchive(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.smsArchiveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

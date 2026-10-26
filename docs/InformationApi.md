@@ -8,6 +8,7 @@ All URIs are relative to *https://api.smspool.net*
 | [**poolRetrieveAll**](InformationApi.md#poolretrieveall) | **POST** /pool/retrieve_all | Pool list |
 | [**poolRetrieveValid**](InformationApi.md#poolretrievevalid) | **POST** /pool/retrieve_valid | Suggested Pools |
 | [**requestBalance**](InformationApi.md#requestbalance) | **POST** /request/balance | Balance |
+| [**requestHistorySearch**](InformationApi.md#requesthistorysearch) | **POST** /request/history_search | History search |
 | [**requestSuccessRate**](InformationApi.md#requestsuccessrate) | **POST** /request/success_rate | Retrieve country success rates per service |
 | [**requestSuggestedCountries**](InformationApi.md#requestsuggestedcountries) | **POST** /request/suggested_countries | Suggested Countries |
 | [**serviceRetrieveAll**](InformationApi.md#serviceretrieveall) | **GET** /service/retrieve_all | Service list |
@@ -279,6 +280,85 @@ This endpoint does not need any parameter.
 | **400** | Error |  -  |
 | **401** | Malformed API key |  -  |
 | **403** | Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## requestHistorySearch
+
+> any requestHistorySearch(search, cursor, limit)
+
+History search
+
+_Not documented yet: the parameters below come straight from the code._
+
+### Example
+
+```ts
+import {
+  Configuration,
+  InformationApi,
+} from '@smspool/sdk';
+import type { RequestHistorySearchRequest } from '@smspool/sdk';
+
+async function example() {
+  console.log("🚀 Testing @smspool/sdk SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new InformationApi(config);
+
+  const body = {
+    // string
+    search: search_example,
+    // string (optional)
+    cursor: cursor_example,
+    // number (optional)
+    limit: 56,
+  } satisfies RequestHistorySearchRequest;
+
+  try {
+    const data = await api.requestHistorySearch(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **search** | `string` |  | [Defaults to `undefined`] |
+| **cursor** | `string` |  | [Optional] [Defaults to `undefined`] |
+| **limit** | `number` |  | [Optional] [Defaults to `undefined`] |
+
+### Return type
+
+**any**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: `application/x-www-form-urlencoded`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | JSON response |  -  |
+| **401** | Malformed API key |  -  |
+| **403** | Unknown or revoked API key |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
