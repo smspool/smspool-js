@@ -64,6 +64,10 @@ export interface PurchaseSmsRequest {
      */
     phonenumber?: number;
     /**
+     * Set to 1 to let SMSPool pick the country: every country with stock is scored on its measured success rate (weighed down when little stock backs it, minus a little per dollar; countries with no order history are left out unless nothing else has stock) with a bonus for a local number, the country your request\'s IP resolves to; with pricing_option=1 the cheapest country close to the best score wins. Ignored when country is sent. The response then carries auto_country with the chosen country and the reason.
+     */
+    autoCountry?: number;
+    /**
      * 
      */
     software?: number;
@@ -119,6 +123,13 @@ export interface SmsAllStockRequest {
      * Pool retrieved from \'\'Pool list\" endpoint (optional)
      */
     pool?: string;
+}
+
+export interface SmsArchiveRequest {
+    /**
+     * 
+     */
+    orderid: string;
 }
 
 export interface SmsCancelRequest {
@@ -226,6 +237,7 @@ export interface SMSApiInterface {
      * @param {string} [activationType] Options: SMS, VOICE, FLASH. SMS will receive regular SMS, VOICE will receive phone calls that mentions the SMS and FLASH is for FLASH calls for verification.
      * @param {number} [carrier] Options: 1 or 2. Pick a carrier (only works for pool Foxtrot US)
      * @param {number} [phonenumber] In case you want to select a specific phone number to order
+     * @param {number} [autoCountry] Set to 1 to let SMSPool pick the country: every country with stock is scored on its measured success rate (weighed down when little stock backs it, minus a little per dollar; countries with no order history are left out unless nothing else has stock) with a bonus for a local number, the country your request\\\&#39;s IP resolves to; with pricing_option&#x3D;1 the cheapest country close to the best score wins. Ignored when country is sent. The response then carries auto_country with the chosen country and the reason.
      * @param {number} [software] 
      * @throws {RequiredError}
      * @memberof SMSApiInterface
@@ -247,6 +259,7 @@ export interface SMSApiInterface {
      * @param {string} [activationType] Options: SMS, VOICE, FLASH. SMS will receive regular SMS, VOICE will receive phone calls that mentions the SMS and FLASH is for FLASH calls for verification.
      * @param {number} [carrier] Options: 1 or 2. Pick a carrier (only works for pool Foxtrot US)
      * @param {number} [phonenumber] In case you want to select a specific phone number to order
+     * @param {number} [autoCountry] Set to 1 to let SMSPool pick the country: every country with stock is scored on its measured success rate (weighed down when little stock backs it, minus a little per dollar; countries with no order history are left out unless nothing else has stock) with a bonus for a local number, the country your request\\\&#39;s IP resolves to; with pricing_option&#x3D;1 the cheapest country close to the best score wins. Ignored when country is sent. The response then carries auto_country with the chosen country and the reason.
      * @param {number} [software] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -411,6 +424,30 @@ export interface SMSApiInterface {
     smsAllStock(requestParameters: SmsAllStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
     /**
+     * Creates request options for smsArchive without sending the request
+     * @param {string} orderid 
+     * @throws {RequiredError}
+     * @memberof SMSApiInterface
+     */
+    smsArchiveRequestOpts(requestParameters: SmsArchiveRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * @summary Archive
+     * @param {string} orderid 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SMSApiInterface
+     */
+    smsArchiveRaw(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * Archive
+     */
+    smsArchive(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
+
+    /**
      * Creates request options for smsCancel without sending the request
      * @param {string} [orderid] 
      * @param {string} [orderids] 
@@ -542,7 +579,7 @@ export interface SMSApiInterface {
     smsMissedRequestOpts(requestParameters: SmsMissedRequest): Promise<runtime.RequestOpts>;
 
     /**
-     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
+     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
      * @summary Missed SMS
      * @param {number} [phonenumber] Only return messages for this number, including the country code. Leave it out for all your numbers.
      * @param {number} [limit] Maximum number of messages. Defaults to 100, at most 500.
@@ -553,7 +590,7 @@ export interface SMSApiInterface {
     smsMissedRaw(requestParameters: SmsMissedRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
-     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
+     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
      * Missed SMS
      */
     smsMissed(requestParameters: SmsMissedRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
@@ -752,6 +789,10 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
             formParams.append('phonenumber', requestParameters['phonenumber'] as any);
         }
 
+        if (requestParameters['autoCountry'] != null) {
+            formParams.append('auto_country', requestParameters['autoCountry'] as any);
+        }
+
         if (requestParameters['software'] != null) {
             formParams.append('software', requestParameters['software'] as any);
         }
@@ -921,6 +962,14 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const consumes: runtime.Consume[] = [
             { contentType: 'application/x-www-form-urlencoded' },
         ];
@@ -1203,6 +1252,83 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
      */
     async smsAllStock(requestParameters: SmsAllStockRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
         const response = await this.smsAllStockRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for smsArchive without sending the request
+     */
+    async smsArchiveRequestOpts(requestParameters: SmsArchiveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['orderid'] == null) {
+            throw new runtime.RequiredError(
+                'orderid',
+                'Required parameter "orderid" was null or undefined when calling smsArchive().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const consumes: runtime.Consume[] = [
+            { contentType: 'application/x-www-form-urlencoded' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['orderid'] != null) {
+            formParams.append('orderid', requestParameters['orderid'] as any);
+        }
+
+
+        let urlPath = `/sms/archive`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * Archive
+     */
+    async smsArchiveRaw(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.smsArchiveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * Archive
+     */
+    async smsArchive(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.smsArchiveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -1595,7 +1721,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
+     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
      * Missed SMS
      */
     async smsMissedRaw(requestParameters: SmsMissedRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -1610,7 +1736,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
+     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
      * Missed SMS
      */
     async smsMissed(requestParameters: SmsMissedRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
