@@ -7,7 +7,9 @@ All URIs are relative to *https://api.smspool.net*
 | [**countryRetrieveAll**](InformationApi.md#countryretrieveall) | **GET** /country/retrieve_all | Country list |
 | [**poolRetrieveAll**](InformationApi.md#poolretrieveall) | **POST** /pool/retrieve_all | Pool list |
 | [**poolRetrieveValid**](InformationApi.md#poolretrievevalid) | **POST** /pool/retrieve_valid | Suggested Pools |
+| [**requestAutoCountry**](InformationApi.md#requestautocountry) | **POST** /request/auto_country | Pick the best country for a service |
 | [**requestBalance**](InformationApi.md#requestbalance) | **POST** /request/balance | Balance |
+| [**requestHistorySearch**](InformationApi.md#requesthistorysearch) | **POST** /request/history_search | History search |
 | [**requestSuccessRate**](InformationApi.md#requestsuccessrate) | **POST** /request/success_rate | Retrieve country success rates per service |
 | [**requestSuggestedCountries**](InformationApi.md#requestsuggestedcountries) | **POST** /request/suggested_countries | Suggested Countries |
 | [**serviceRetrieveAll**](InformationApi.md#serviceretrieveall) | **GET** /service/retrieve_all | Service list |
@@ -217,6 +219,77 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
+## requestAutoCountry
+
+> any requestAutoCountry(service, pricingOption)
+
+Pick the best country for a service
+
+Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\&#39;s \&quot;Pick for me\&quot;). It sends an HTTP POST request to the URL &#x60;https://api.smspool.net/request/auto_country&#x60;.  Every country with stock is scored on its measured success rate (a country with no order history displays 100% but has nothing to back it up, so it is left out unless no measured country has stock), weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\&#39;s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With &#x60;pricing_option&#x3D;1&#x60; the cheapest country within reach of the best score wins instead.  Send &#x60;auto_country&#x3D;1&#x60; to &#x60;/purchase/sms&#x60; to order with the same choice in one call.
+
+### Example
+
+```ts
+import {
+  Configuration,
+  InformationApi,
+} from '@smspool/sdk';
+import type { RequestAutoCountryRequest } from '@smspool/sdk';
+
+async function example() {
+  console.log("🚀 Testing @smspool/sdk SDK...");
+  const api = new InformationApi();
+
+  const body = {
+    // string | Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
+    service: service_example,
+    // number | Set to 1 to prefer the cheapest country among those close to the best score; 0 (default) picks purely on the score. (optional)
+    pricingOption: 56,
+  } satisfies RequestAutoCountryRequest;
+
+  try {
+    const data = await api.requestAutoCountry(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **service** | `string` | Service name or service ID which can be retrieved at the /service/retrieve_all endpoint | [Defaults to `undefined`] |
+| **pricingOption** | `number` | Set to 1 to prefer the cheapest country among those close to the best score; 0 (default) picks purely on the score. | [Optional] [Defaults to `undefined`] |
+
+### Return type
+
+**any**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/x-www-form-urlencoded`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+| **400** | Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
 ## requestBalance
 
 > any requestBalance()
@@ -279,6 +352,85 @@ This endpoint does not need any parameter.
 | **400** | Error |  -  |
 | **401** | Malformed API key |  -  |
 | **403** | Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## requestHistorySearch
+
+> any requestHistorySearch(search, cursor, limit)
+
+History search
+
+_Not documented yet: the parameters below come straight from the code._
+
+### Example
+
+```ts
+import {
+  Configuration,
+  InformationApi,
+} from '@smspool/sdk';
+import type { RequestHistorySearchRequest } from '@smspool/sdk';
+
+async function example() {
+  console.log("🚀 Testing @smspool/sdk SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new InformationApi(config);
+
+  const body = {
+    // string
+    search: search_example,
+    // string (optional)
+    cursor: cursor_example,
+    // number (optional)
+    limit: 56,
+  } satisfies RequestHistorySearchRequest;
+
+  try {
+    const data = await api.requestHistorySearch(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **search** | `string` |  | [Defaults to `undefined`] |
+| **cursor** | `string` |  | [Optional] [Defaults to `undefined`] |
+| **limit** | `number` |  | [Optional] [Defaults to `undefined`] |
+
+### Return type
+
+**any**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: `application/x-www-form-urlencoded`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | JSON response |  -  |
+| **401** | Malformed API key |  -  |
+| **403** | Unknown or revoked API key |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

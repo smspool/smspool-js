@@ -1111,7 +1111,11 @@ import type { RentalStockRequest } from '@smspool/sdk';
 
 async function example() {
   console.log("🚀 Testing @smspool/sdk SDK...");
-  const api = new RentalApi();
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new RentalApi(config);
 
   const body = {
     // number | The rental ID retrieved from `Retrieve Rental IDs`
@@ -1149,7 +1153,7 @@ example().catch(console.error);
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -1161,6 +1165,8 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | OK |  -  |
+| **401** | Malformed API key |  -  |
+| **403** | Unknown or revoked API key |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

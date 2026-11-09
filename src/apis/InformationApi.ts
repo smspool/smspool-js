@@ -40,6 +40,32 @@ export interface PoolRetrieveValidRequest {
     includeStock?: string;
 }
 
+export interface RequestAutoCountryRequest {
+    /**
+     * Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
+     */
+    service: string;
+    /**
+     * Set to 1 to prefer the cheapest country among those close to the best score; 0 (default) picks purely on the score.
+     */
+    pricingOption?: number;
+}
+
+export interface RequestHistorySearchRequest {
+    /**
+     * 
+     */
+    search: string;
+    /**
+     * 
+     */
+    cursor?: string;
+    /**
+     * 
+     */
+    limit?: number;
+}
+
 export interface RequestSuccessRateRequest {
     /**
      * Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
@@ -149,6 +175,32 @@ export interface InformationApiInterface {
     poolRetrieveValid(requestParameters: PoolRetrieveValidRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
     /**
+     * Creates request options for requestAutoCountry without sending the request
+     * @param {string} service Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
+     * @param {number} [pricingOption] Set to 1 to prefer the cheapest country among those close to the best score; 0 (default) picks purely on the score.
+     * @throws {RequiredError}
+     * @memberof InformationApiInterface
+     */
+    requestAutoCountryRequestOpts(requestParameters: RequestAutoCountryRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\'s \"Pick for me\"). It sends an HTTP POST request to the URL `https://api.smspool.net/request/auto_country`.  Every country with stock is scored on its measured success rate (a country with no order history displays 100% but has nothing to back it up, so it is left out unless no measured country has stock), weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\'s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With `pricing_option=1` the cheapest country within reach of the best score wins instead.  Send `auto_country=1` to `/purchase/sms` to order with the same choice in one call.
+     * @summary Pick the best country for a service
+     * @param {string} service Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
+     * @param {number} [pricingOption] Set to 1 to prefer the cheapest country among those close to the best score; 0 (default) picks purely on the score.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof InformationApiInterface
+     */
+    requestAutoCountryRaw(requestParameters: RequestAutoCountryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\'s \"Pick for me\"). It sends an HTTP POST request to the URL `https://api.smspool.net/request/auto_country`.  Every country with stock is scored on its measured success rate (a country with no order history displays 100% but has nothing to back it up, so it is left out unless no measured country has stock), weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\'s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With `pricing_option=1` the cheapest country within reach of the best score wins instead.  Send `auto_country=1` to `/purchase/sms` to order with the same choice in one call.
+     * Pick the best country for a service
+     */
+    requestAutoCountry(requestParameters: RequestAutoCountryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
+
+    /**
      * Creates request options for requestBalance without sending the request
      * @throws {RequiredError}
      * @memberof InformationApiInterface
@@ -169,6 +221,34 @@ export interface InformationApiInterface {
      * Balance
      */
     requestBalance(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
+
+    /**
+     * Creates request options for requestHistorySearch without sending the request
+     * @param {string} search 
+     * @param {string} [cursor] 
+     * @param {number} [limit] 
+     * @throws {RequiredError}
+     * @memberof InformationApiInterface
+     */
+    requestHistorySearchRequestOpts(requestParameters: RequestHistorySearchRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * @summary History search
+     * @param {string} search 
+     * @param {string} [cursor] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof InformationApiInterface
+     */
+    requestHistorySearchRaw(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * History search
+     */
+    requestHistorySearch(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
     /**
      * Creates request options for requestSuccessRate without sending the request
@@ -430,6 +510,79 @@ export class InformationApi extends runtime.BaseAPI implements InformationApiInt
     }
 
     /**
+     * Creates request options for requestAutoCountry without sending the request
+     */
+    async requestAutoCountryRequestOpts(requestParameters: RequestAutoCountryRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['service'] == null) {
+            throw new runtime.RequiredError(
+                'service',
+                'Required parameter "service" was null or undefined when calling requestAutoCountry().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const consumes: runtime.Consume[] = [
+            { contentType: 'application/x-www-form-urlencoded' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['service'] != null) {
+            formParams.append('service', requestParameters['service'] as any);
+        }
+
+        if (requestParameters['pricingOption'] != null) {
+            formParams.append('pricing_option', requestParameters['pricingOption'] as any);
+        }
+
+
+        let urlPath = `/request/auto_country`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\'s \"Pick for me\"). It sends an HTTP POST request to the URL `https://api.smspool.net/request/auto_country`.  Every country with stock is scored on its measured success rate (a country with no order history displays 100% but has nothing to back it up, so it is left out unless no measured country has stock), weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\'s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With `pricing_option=1` the cheapest country within reach of the best score wins instead.  Send `auto_country=1` to `/purchase/sms` to order with the same choice in one call.
+     * Pick the best country for a service
+     */
+    async requestAutoCountryRaw(requestParameters: RequestAutoCountryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.requestAutoCountryRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\'s \"Pick for me\"). It sends an HTTP POST request to the URL `https://api.smspool.net/request/auto_country`.  Every country with stock is scored on its measured success rate (a country with no order history displays 100% but has nothing to back it up, so it is left out unless no measured country has stock), weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\'s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With `pricing_option=1` the cheapest country within reach of the best score wins instead.  Send `auto_country=1` to `/purchase/sms` to order with the same choice in one call.
+     * Pick the best country for a service
+     */
+    async requestAutoCountry(requestParameters: RequestAutoCountryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.requestAutoCountryRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for requestBalance without sending the request
      */
     async requestBalanceRequestOpts(): Promise<runtime.RequestOpts> {
@@ -477,6 +630,91 @@ export class InformationApi extends runtime.BaseAPI implements InformationApiInt
      */
     async requestBalance(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
         const response = await this.requestBalanceRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for requestHistorySearch without sending the request
+     */
+    async requestHistorySearchRequestOpts(requestParameters: RequestHistorySearchRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['search'] == null) {
+            throw new runtime.RequiredError(
+                'search',
+                'Required parameter "search" was null or undefined when calling requestHistorySearch().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const consumes: runtime.Consume[] = [
+            { contentType: 'application/x-www-form-urlencoded' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['search'] != null) {
+            formParams.append('search', requestParameters['search'] as any);
+        }
+
+        if (requestParameters['cursor'] != null) {
+            formParams.append('cursor', requestParameters['cursor'] as any);
+        }
+
+        if (requestParameters['limit'] != null) {
+            formParams.append('limit', requestParameters['limit'] as any);
+        }
+
+
+        let urlPath = `/request/history_search`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * History search
+     */
+    async requestHistorySearchRaw(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.requestHistorySearchRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * _Not documented yet: the parameters below come straight from the code._
+     * History search
+     */
+    async requestHistorySearch(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.requestHistorySearchRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
