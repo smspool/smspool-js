@@ -9,8 +9,10 @@ All URIs are relative to *https://api.smspool.net*
 | [**requestArchive**](SMSApi.md#requestarchive) | **POST** /request/archive | Archive all orders |
 | [**requestAreacodes**](SMSApi.md#requestareacodes) | **POST** /request/areacodes | Request available areacodes |
 | [**requestHistory**](SMSApi.md#requesthistory) | **POST** /request/history | Order History |
+| [**requestHistorySearch**](SMSApi.md#requesthistorysearch) | **POST** /request/history_search | Search order history |
 | [**smsActivate**](SMSApi.md#smsactivate) | **POST** /sms/activate | Activate SMS |
 | [**smsAllStock**](SMSApi.md#smsallstock) | **POST** /sms/all_stock | One-time stock for all services |
+| [**smsArchive**](SMSApi.md#smsarchive) | **POST** /sms/archive | Archive one order |
 | [**smsCancel**](SMSApi.md#smscancel) | **POST** /sms/cancel | Cancel SMS |
 | [**smsCancelAll**](SMSApi.md#smscancelall) | **POST** /sms/cancel_all | Cancel All SMS |
 | [**smsCheck**](SMSApi.md#smscheck) | **POST** /sms/check | Check SMS |
@@ -26,9 +28,11 @@ All URIs are relative to *https://api.smspool.net*
 
 ## purchaseSms
 
-> any purchaseSms(service, country, pool, maxPrice, pricingOption, quantity, areacode, exclude, createToken, activationType, carrier, phonenumber, software)
+> any purchaseSms(service, idempotencyKey, country, pool, maxPrice, pricingOption, quantity, areacode, exclude, createToken, activationType, carrier, phonenumber, autoCountry, response, software)
 
 Order SMS
+
+Orders one or more numbers for a service.  ### Response shapes  Without &#x60;response&#x3D;v2&#x60; the shape depends on &#x60;quantity&#x60;: one number returns the order object; several return a JSON array of order objects; if ordering stops part-way, an object with the orders bought so far under &#x60;\&quot;0\&quot;&#x60;, &#x60;\&quot;1\&quot;&#x60;, ... plus &#x60;message&#x60;.  With &#x60;response&#x3D;v2&#x60; every case returns the same object:  - &#x60;success&#x60;: 1 when every requested number was ordered, otherwise 0 - &#x60;orders&#x60;: the orders that were placed (may be empty) - &#x60;failed&#x60;: the error that stopped the request, as a one-element list (empty on success) - &#x60;message&#x60;: a summary - &#x60;auto_country&#x60;: only with &#x60;auto_country&#x3D;1&#x60;, the chosen country  &#x60;response&#x3D;v2&#x60; is ignored together with &#x60;create_token&#x3D;1&#x60;.  ### Pool  &#x60;pool&#x60; is a pool ID or name from the &#x60;Pool List&#x60; endpoint. A name that does not exist answers 400 with &#x60;type: INVALID_POOL&#x60;. Leave it out (or send it empty or &#x60;0&#x60;) for any pool.  ### Retrying safely  Send an &#x60;Idempotency-Key&#x60; header so a retry after a timeout cannot buy twice.
 
 ### Example
 
@@ -50,15 +54,17 @@ async function example() {
   const body = {
     // string | The service or number retrieved from the `Service List` endpoint
     service: service_example,
+    // string (optional)
+    idempotencyKey: 3f1c2c0e-7d5b-4a52-9a53-1f6f0f0f2b11,
     // string | The country in ISO format or number retrieved from the `Country List` endpoint (optional)
     country: country_example,
-    // string | The pool or number retrieved from the `Pool List` endpoint (optional) (optional)
+    // string | The pool ID or name retrieved from the `Pool List` endpoint (optional). An unknown name answers 400 `INVALID_POOL`. (optional)
     pool: pool_example,
     // number | The max price you are willing to pay per number (optional)
     maxPrice: 8.14,
     // number | Set to 0 if you\\\'d like the cheapest numbers, set to 1 for highest success rate (optional)
     pricingOption: 56,
-    // number | Quantity of numbers ordered (optional)
+    // number | Quantity of numbers ordered, 1 to 20. Must be a whole number. (optional)
     quantity: 56,
     // string | Areacodes you would like to include or exclude in JSON format (optional)
     areacode: areacode_example,
@@ -70,8 +76,12 @@ async function example() {
     activationType: activationType_example,
     // number | Options: 1 or 2. Pick a carrier (only works for pool Foxtrot US) (optional)
     carrier: 56,
-    // number | In case you want to select a specific phone number to order (optional)
+    // number | In case you want to select a specific phone number to order. Digits with the country code; a leading +, spaces and dashes are ignored. (optional)
     phonenumber: 56,
+    // number | Set to 1 to let SMSPool pick the country: every country with stock is scored on its expected success rate (estimated from the country\\\'s record across all services when the service has few orders there; weighed down when little stock backs it, minus a little per dollar) with a bonus for a local number, the country your request\\\'s IP resolves to; with pricing_option=1 the cheapest country close to the best score wins. Ignored when country is sent. The response then carries auto_country with the chosen country and the reason. (optional)
+    autoCountry: 56,
+    // string | Set to `v2` for one response shape whatever the quantity: `{success, orders, failed, message}`. Leave out for the legacy shapes. (optional)
+    response: response_example,
     // number (optional)
     software: 56,
   } satisfies PurchaseSmsRequest;
@@ -94,17 +104,20 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **service** | `string` | The service or number retrieved from the &#x60;Service List&#x60; endpoint | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |  | [Optional] [Defaults to `undefined`] |
 | **country** | `string` | The country in ISO format or number retrieved from the &#x60;Country List&#x60; endpoint | [Optional] [Defaults to `undefined`] |
-| **pool** | `string` | The pool or number retrieved from the &#x60;Pool List&#x60; endpoint (optional) | [Optional] [Defaults to `undefined`] |
+| **pool** | `string` | The pool ID or name retrieved from the &#x60;Pool List&#x60; endpoint (optional). An unknown name answers 400 &#x60;INVALID_POOL&#x60;. | [Optional] [Defaults to `undefined`] |
 | **maxPrice** | `number` | The max price you are willing to pay per number | [Optional] [Defaults to `undefined`] |
 | **pricingOption** | `number` | Set to 0 if you\\\&#39;d like the cheapest numbers, set to 1 for highest success rate | [Optional] [Defaults to `undefined`] |
-| **quantity** | `number` | Quantity of numbers ordered | [Optional] [Defaults to `undefined`] |
+| **quantity** | `number` | Quantity of numbers ordered, 1 to 20. Must be a whole number. | [Optional] [Defaults to `undefined`] |
 | **areacode** | `string` | Areacodes you would like to include or exclude in JSON format | [Optional] [Defaults to `undefined`] |
 | **exclude** | `number` | Set exclude to 1 if you would like to exclude all listed area codes. | [Optional] [Defaults to `undefined`] |
 | **createToken** | `number` | Optional param; set to 1 if you\\\&#39;d like to create a token link that anyone can access. | [Optional] [Defaults to `undefined`] |
 | **activationType** | `string` | Options: SMS, VOICE, FLASH. SMS will receive regular SMS, VOICE will receive phone calls that mentions the SMS and FLASH is for FLASH calls for verification. | [Optional] [Defaults to `undefined`] |
 | **carrier** | `number` | Options: 1 or 2. Pick a carrier (only works for pool Foxtrot US) | [Optional] [Defaults to `undefined`] |
-| **phonenumber** | `number` | In case you want to select a specific phone number to order | [Optional] [Defaults to `undefined`] |
+| **phonenumber** | `number` | In case you want to select a specific phone number to order. Digits with the country code; a leading +, spaces and dashes are ignored. | [Optional] [Defaults to `undefined`] |
+| **autoCountry** | `number` | Set to 1 to let SMSPool pick the country: every country with stock is scored on its expected success rate (estimated from the country\\\&#39;s record across all services when the service has few orders there; weighed down when little stock backs it, minus a little per dollar) with a bonus for a local number, the country your request\\\&#39;s IP resolves to; with pricing_option&#x3D;1 the cheapest country close to the best score wins. Ignored when country is sent. The response then carries auto_country with the chosen country and the reason. | [Optional] [Defaults to `undefined`] |
+| **response** | `string` | Set to &#x60;v2&#x60; for one response shape whatever the quantity: &#x60;{success, orders, failed, message}&#x60;. Leave out for the legacy shapes. | [Optional] [Defaults to `undefined`] |
 | **software** | `number` |  | [Optional] [Defaults to `undefined`] |
 
 ### Return type
@@ -125,8 +138,10 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | OK |  -  |
+| **400** | Error |  -  |
 | **401** | Malformed API key |  -  |
 | **403** | Unknown or revoked API key |  -  |
+| **409** | Error |  -  |
 | **422** | Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
@@ -279,7 +294,11 @@ import type { RequestAreacodesRequest } from '@smspool/sdk';
 
 async function example() {
   console.log("🚀 Testing @smspool/sdk SDK...");
-  const api = new SMSApi();
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new SMSApi(config);
 
   const body = {
     // string | The service or number retrieved from the `Service List` endpoint
@@ -317,7 +336,7 @@ example().catch(console.error);
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -329,6 +348,8 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | JSON response |  -  |
+| **401** | Malformed API key |  -  |
+| **403** | Unknown or revoked API key |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
@@ -408,6 +429,86 @@ example().catch(console.error);
 | **200** | OK |  -  |
 | **401** | Malformed API key |  -  |
 | **403** | Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## requestHistorySearch
+
+> any requestHistorySearch(search, cursor, limit)
+
+Search order history
+
+One step of a search through your order history, newest orders first. Each call reads a bounded slice of your orders and returns the matches in it plus &#x60;next&#x60;. Pass &#x60;next&#x60; back as &#x60;cursor&#x60; to continue; the search is complete when &#x60;next&#x60; is &#x60;null&#x60;. A call can return no matches and still have a &#x60;next&#x60;.
+
+### Example
+
+```ts
+import {
+  Configuration,
+  SMSApi,
+} from '@smspool/sdk';
+import type { RequestHistorySearchRequest } from '@smspool/sdk';
+
+async function example() {
+  console.log("🚀 Testing @smspool/sdk SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new SMSApi(config);
+
+  const body = {
+    // string | The search term, as typed into the order history\\\'s search box. At most 32 characters.
+    search: search_example,
+    // string | `next` from the previous call. Leave out for the first call. (optional)
+    cursor: cursor_example,
+    // number | Matches per call, 1 to 500 (default 100). (optional)
+    limit: 56,
+  } satisfies RequestHistorySearchRequest;
+
+  try {
+    const data = await api.requestHistorySearch(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **search** | `string` | The search term, as typed into the order history\\\&#39;s search box. At most 32 characters. | [Defaults to `undefined`] |
+| **cursor** | `string` | &#x60;next&#x60; from the previous call. Leave out for the first call. | [Optional] [Defaults to `undefined`] |
+| **limit** | `number` | Matches per call, 1 to 500 (default 100). | [Optional] [Defaults to `undefined`] |
+
+### Return type
+
+**any**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: `application/x-www-form-urlencoded`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+| **401** | Malformed API key |  -  |
+| **403** | Unknown or revoked API key |  -  |
+| **422** | Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
@@ -493,7 +594,7 @@ example().catch(console.error);
 
 One-time stock for all services
 
-This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to &#x60;https://api.smspool.net/sms/stock&#x60;.  ### Request Parameters  The \\&#x60;key\\&#x60; parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - &#x60;success&#x60; (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - &#x60;message&#x60; (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+Retrieves the one-time SMS stock for every country, service and pool, optionally filtered by &#x60;country&#x60;, &#x60;service&#x60; and &#x60;pool&#x60;. The API key is optional.  The unfiltered list is large and rebuilt once a minute. It is sent with &#x60;ETag&#x60;, &#x60;Last-Modified&#x60; and &#x60;Cache-Control&#x60; headers: send &#x60;If-None-Match&#x60; (or &#x60;If-Modified-Since&#x60;) with your next request and you get &#x60;304 Not Modified&#x60; with no body while the list has not changed.
 
 ### Example
 
@@ -560,13 +661,86 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
+## smsArchive
+
+> any smsArchive(orderid)
+
+Archive one order
+
+Removes one finished order from your active orders. Nothing is refunded and the order stays in your history; &#x60;/sms/unarchive&#x60; brings it back. An order that is still waiting for an SMS cannot be archived: cancel it with &#x60;/sms/cancel&#x60; instead.
+
+### Example
+
+```ts
+import {
+  Configuration,
+  SMSApi,
+} from '@smspool/sdk';
+import type { SmsArchiveRequest } from '@smspool/sdk';
+
+async function example() {
+  console.log("🚀 Testing @smspool/sdk SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new SMSApi(config);
+
+  const body = {
+    // string | The order code from the `Order SMS` endpoint.
+    orderid: orderid_example,
+  } satisfies SmsArchiveRequest;
+
+  try {
+    const data = await api.smsArchive(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **orderid** | `string` | The order code from the &#x60;Order SMS&#x60; endpoint. | [Defaults to `undefined`] |
+
+### Return type
+
+**any**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: `application/x-www-form-urlencoded`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+| **401** | Malformed API key |  -  |
+| **403** | Unknown or revoked API key |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
 ## smsCancel
 
 > any smsCancel(orderid, orderids, expiry, ban)
 
 Cancel SMS
 
-# Cancel your SMS order  ## Responses  | **Success** | {\&quot;success\&quot;:1} | | **Fail** | {\&quot;success\&quot;:0} |
+Cancels an order. An order that has not received a code is cancelled and refunded. An order that already has its code cannot be refunded; it is only archived (removed from your active orders).  Both answer &#x60;success: 1&#x60;; &#x60;action&#x60; tells them apart: &#x60;refunded&#x60; or &#x60;archived&#x60;.  Send &#x60;orderids&#x60; (comma-separated) to cancel several orders at once; the response then lists one result per order under &#x60;results&#x60;.
 
 ### Example
 
@@ -928,7 +1102,7 @@ This endpoint does not need any parameter.
 
 Missed SMS
 
-Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. &#x60;url&#x60;, &#x60;code&#x60; and &#x60;email&#x60; hold the first link, code and email address found in the message, or an empty string.
+Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. &#x60;url&#x60;, &#x60;code&#x60; and &#x60;email&#x60; hold the first link, code and email address found in the message, or an empty string.
 
 ### Example
 
@@ -1152,7 +1326,7 @@ example().catch(console.error);
 
 One-time SMS stock
 
-This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to &#x60;https://api.smspool.net/sms/stock&#x60;.  ### Request Parameters  The \\&#x60;key\\&#x60; parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - &#x60;success&#x60; (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - &#x60;message&#x60; (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+Retrieves the one-time SMS stock for a country and service, optionally for one pool.  ### Request Parameters  The API key is optional. Without it the request is limited to 20 calls a minute per IP address; with it the limit is 200 a minute.  ### Response  - &#x60;success&#x60; (integer): 1 when the stock could be read, 0 otherwise. - &#x60;amount&#x60; (integer): the numbers in stock.
 
 ### Example
 

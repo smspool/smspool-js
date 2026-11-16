@@ -158,7 +158,7 @@ example().catch(console.error);
 
 ## voucherGenerate
 
-> any voucherGenerate(amount)
+> any voucherGenerate(amount, idempotencyKey)
 
 Generate voucher
 
@@ -182,6 +182,8 @@ async function example() {
   const body = {
     // number | The amount per promocode
     amount: 8.14,
+    // string (optional)
+    idempotencyKey: 3f1c2c0e-7d5b-4a52-9a53-1f6f0f0f2b11,
   } satisfies VoucherGenerateRequest;
 
   try {
@@ -202,6 +204,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **amount** | `number` | The amount per promocode | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |  | [Optional] [Defaults to `undefined`] |
 
 ### Return type
 

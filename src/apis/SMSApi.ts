@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * SMSPool API
- * Every endpoint accepts its parameters as form fields (POST) or query parameters (GET).  Authenticate with your API key from https://www.smspool.net/my/settings, either as a bearer token (`Authorization: Bearer <key>`) or as a `key` parameter.
+ * Every endpoint accepts its parameters as form fields (POST) or query parameters (GET). A JSON object body (`Content-Type: application/json`) works too: its top-level fields are read as parameters; a parameter that is also in the query string or form body wins.  Authenticate with your API key from https://www.smspool.net/my/settings as a bearer token: `Authorization: Bearer <key>`. A `key` field in a POST body works too. Keep the key out of the URL: a URL is saved in browser history and can be recorded by proxies and logs on the way to us.  Use of the API is subject to the [Terms of Service](https://www.smspool.net/tos#api). Article 11 covers API use: sanctions and geographic restrictions, what you must require of your own users if you resell the service, and the safekeeping of keys.  ## Errors  An error answers with `success: 0`, a human-readable `message` and, where the API can name the cause, a machine-readable `type`. Check `type`, not the text of `message`. Parameter and key errors also carry `errors`, one entry per problem (`message`, `param`, `type`); the top-level `message` and `type` repeat the API key\'s entry when there is one, otherwise the first.  | `type` | HTTP | Meaning | | --- | --- | --- | | `MISSING_PARAMETER` | 400 | A required parameter was not sent | | `INVALID_PARAMETER` | varies | A parameter has a value the endpoint cannot use | | `INVALID_POOL` | 400 | `/purchase/sms`: the `pool` name does not exist | | `INVALID_KEY` | 401 / 403 | The API key is malformed (401) or unknown or revoked (403) | | `API_KEY_SCOPE` | 403 | The API key is not allowed to call this endpoint, or not from this IP address | | `RATE_LIMITED` | 429 | Too many requests; wait for the `Retry-After` header\'s seconds | | `IDEMPOTENCY_IN_PROGRESS` | 409 | The first request with this `Idempotency-Key` has not finished |  Endpoints add their own types (for example `OUT_OF_STOCK`). Older errors may have no `type`.  ## Idempotent purchases  `/purchase/sms`, `/purchase/rental`, `/esim/purchase` and `/voucher/generate` accept an optional `Idempotency-Key` header (or an `idempotency_key` parameter): 1 to 128 printable ASCII characters that you choose, unique per purchase, for example a UUID. If a request times out, send it again with the same key:  - the first request runs normally; - a repeat within 24 hours answers with the first request\'s status and body and the header `Idempotent-Replay: true`, and buys nothing; - a repeat while the first is still running answers `409` with `type: IDEMPOTENCY_IN_PROGRESS`; retry shortly.  A request that bought nothing (`success: 0`) does not use up its key, so it can be retried with the same one. A key belongs to your account and the endpoint. Requests without a key behave as they always have.  ## Webhooks  Instead of polling `/sms/check`, set a webhook URL under Settings → Developer and receive each SMS as a signed JSON `POST`. The events are listed under Webhooks below; setup, retries and signature checks are described in [How to set up webhooks](https://www.smspool.net/article/how-to-setup-webhooks-for-smspool-ec19b80ade92).  ## Health check  `GET /up` needs no key and answers `200 {\"status\":\"ok\",...}` or `503 {\"status\":\"degraded\",...}`.
  *
  * The version of the OpenAPI document: 1.0
  * 
@@ -20,11 +20,15 @@ export interface PurchaseSmsRequest {
      */
     service: string;
     /**
+     * 
+     */
+    idempotencyKey?: string;
+    /**
      * The country in ISO format or number retrieved from the `Country List` endpoint
      */
     country?: string;
     /**
-     * The pool or number retrieved from the `Pool List` endpoint (optional)
+     * The pool ID or name retrieved from the `Pool List` endpoint (optional). An unknown name answers 400 `INVALID_POOL`.
      */
     pool?: string;
     /**
@@ -36,7 +40,7 @@ export interface PurchaseSmsRequest {
      */
     pricingOption?: number;
     /**
-     * Quantity of numbers ordered
+     * Quantity of numbers ordered, 1 to 20. Must be a whole number.
      */
     quantity?: number;
     /**
@@ -60,9 +64,17 @@ export interface PurchaseSmsRequest {
      */
     carrier?: number;
     /**
-     * In case you want to select a specific phone number to order
+     * In case you want to select a specific phone number to order. Digits with the country code; a leading +, spaces and dashes are ignored.
      */
     phonenumber?: number;
+    /**
+     * Set to 1 to let SMSPool pick the country: every country with stock is scored on its expected success rate (estimated from the country\'s record across all services when the service has few orders there; weighed down when little stock backs it, minus a little per dollar) with a bonus for a local number, the country your request\'s IP resolves to; with pricing_option=1 the cheapest country close to the best score wins. Ignored when country is sent. The response then carries auto_country with the chosen country and the reason.
+     */
+    autoCountry?: number;
+    /**
+     * Set to `v2` for one response shape whatever the quantity: `{success, orders, failed, message}`. Leave out for the legacy shapes.
+     */
+    response?: string;
     /**
      * 
      */
@@ -99,6 +111,21 @@ export interface RequestHistoryRequest {
     search?: string;
 }
 
+export interface RequestHistorySearchRequest {
+    /**
+     * The search term, as typed into the order history\'s search box. At most 32 characters.
+     */
+    search: string;
+    /**
+     * `next` from the previous call. Leave out for the first call.
+     */
+    cursor?: string;
+    /**
+     * Matches per call, 1 to 500 (default 100).
+     */
+    limit?: number;
+}
+
 export interface SmsActivateRequest {
     /**
      * 
@@ -119,6 +146,13 @@ export interface SmsAllStockRequest {
      * Pool retrieved from \'\'Pool list\" endpoint (optional)
      */
     pool?: string;
+}
+
+export interface SmsArchiveRequest {
+    /**
+     * The order code from the `Order SMS` endpoint.
+     */
+    orderid: string;
 }
 
 export interface SmsCancelRequest {
@@ -215,17 +249,20 @@ export interface SMSApiInterface {
     /**
      * Creates request options for purchaseSms without sending the request
      * @param {string} service The service or number retrieved from the &#x60;Service List&#x60; endpoint
+     * @param {string} [idempotencyKey] 
      * @param {string} [country] The country in ISO format or number retrieved from the &#x60;Country List&#x60; endpoint
-     * @param {string} [pool] The pool or number retrieved from the &#x60;Pool List&#x60; endpoint (optional)
+     * @param {string} [pool] The pool ID or name retrieved from the &#x60;Pool List&#x60; endpoint (optional). An unknown name answers 400 &#x60;INVALID_POOL&#x60;.
      * @param {number} [maxPrice] The max price you are willing to pay per number
      * @param {number} [pricingOption] Set to 0 if you\\\&#39;d like the cheapest numbers, set to 1 for highest success rate
-     * @param {number} [quantity] Quantity of numbers ordered
+     * @param {number} [quantity] Quantity of numbers ordered, 1 to 20. Must be a whole number.
      * @param {string} [areacode] Areacodes you would like to include or exclude in JSON format
      * @param {number} [exclude] Set exclude to 1 if you would like to exclude all listed area codes.
      * @param {number} [createToken] Optional param; set to 1 if you\\\&#39;d like to create a token link that anyone can access.
      * @param {string} [activationType] Options: SMS, VOICE, FLASH. SMS will receive regular SMS, VOICE will receive phone calls that mentions the SMS and FLASH is for FLASH calls for verification.
      * @param {number} [carrier] Options: 1 or 2. Pick a carrier (only works for pool Foxtrot US)
-     * @param {number} [phonenumber] In case you want to select a specific phone number to order
+     * @param {number} [phonenumber] In case you want to select a specific phone number to order. Digits with the country code; a leading +, spaces and dashes are ignored.
+     * @param {number} [autoCountry] Set to 1 to let SMSPool pick the country: every country with stock is scored on its expected success rate (estimated from the country\\\&#39;s record across all services when the service has few orders there; weighed down when little stock backs it, minus a little per dollar) with a bonus for a local number, the country your request\\\&#39;s IP resolves to; with pricing_option&#x3D;1 the cheapest country close to the best score wins. Ignored when country is sent. The response then carries auto_country with the chosen country and the reason.
+     * @param {string} [response] Set to &#x60;v2&#x60; for one response shape whatever the quantity: &#x60;{success, orders, failed, message}&#x60;. Leave out for the legacy shapes.
      * @param {number} [software] 
      * @throws {RequiredError}
      * @memberof SMSApiInterface
@@ -233,20 +270,23 @@ export interface SMSApiInterface {
     purchaseSmsRequestOpts(requestParameters: PurchaseSmsRequest): Promise<runtime.RequestOpts>;
 
     /**
-     * 
+     * Orders one or more numbers for a service.  ### Response shapes  Without `response=v2` the shape depends on `quantity`: one number returns the order object; several return a JSON array of order objects; if ordering stops part-way, an object with the orders bought so far under `\"0\"`, `\"1\"`, ... plus `message`.  With `response=v2` every case returns the same object:  - `success`: 1 when every requested number was ordered, otherwise 0 - `orders`: the orders that were placed (may be empty) - `failed`: the error that stopped the request, as a one-element list (empty on success) - `message`: a summary - `auto_country`: only with `auto_country=1`, the chosen country  `response=v2` is ignored together with `create_token=1`.  ### Pool  `pool` is a pool ID or name from the `Pool List` endpoint. A name that does not exist answers 400 with `type: INVALID_POOL`. Leave it out (or send it empty or `0`) for any pool.  ### Retrying safely  Send an `Idempotency-Key` header so a retry after a timeout cannot buy twice.
      * @summary Order SMS
      * @param {string} service The service or number retrieved from the &#x60;Service List&#x60; endpoint
+     * @param {string} [idempotencyKey] 
      * @param {string} [country] The country in ISO format or number retrieved from the &#x60;Country List&#x60; endpoint
-     * @param {string} [pool] The pool or number retrieved from the &#x60;Pool List&#x60; endpoint (optional)
+     * @param {string} [pool] The pool ID or name retrieved from the &#x60;Pool List&#x60; endpoint (optional). An unknown name answers 400 &#x60;INVALID_POOL&#x60;.
      * @param {number} [maxPrice] The max price you are willing to pay per number
      * @param {number} [pricingOption] Set to 0 if you\\\&#39;d like the cheapest numbers, set to 1 for highest success rate
-     * @param {number} [quantity] Quantity of numbers ordered
+     * @param {number} [quantity] Quantity of numbers ordered, 1 to 20. Must be a whole number.
      * @param {string} [areacode] Areacodes you would like to include or exclude in JSON format
      * @param {number} [exclude] Set exclude to 1 if you would like to exclude all listed area codes.
      * @param {number} [createToken] Optional param; set to 1 if you\\\&#39;d like to create a token link that anyone can access.
      * @param {string} [activationType] Options: SMS, VOICE, FLASH. SMS will receive regular SMS, VOICE will receive phone calls that mentions the SMS and FLASH is for FLASH calls for verification.
      * @param {number} [carrier] Options: 1 or 2. Pick a carrier (only works for pool Foxtrot US)
-     * @param {number} [phonenumber] In case you want to select a specific phone number to order
+     * @param {number} [phonenumber] In case you want to select a specific phone number to order. Digits with the country code; a leading +, spaces and dashes are ignored.
+     * @param {number} [autoCountry] Set to 1 to let SMSPool pick the country: every country with stock is scored on its expected success rate (estimated from the country\\\&#39;s record across all services when the service has few orders there; weighed down when little stock backs it, minus a little per dollar) with a bonus for a local number, the country your request\\\&#39;s IP resolves to; with pricing_option&#x3D;1 the cheapest country close to the best score wins. Ignored when country is sent. The response then carries auto_country with the chosen country and the reason.
+     * @param {string} [response] Set to &#x60;v2&#x60; for one response shape whatever the quantity: &#x60;{success, orders, failed, message}&#x60;. Leave out for the legacy shapes.
      * @param {number} [software] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -255,6 +295,7 @@ export interface SMSApiInterface {
     purchaseSmsRaw(requestParameters: PurchaseSmsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
+     * Orders one or more numbers for a service.  ### Response shapes  Without `response=v2` the shape depends on `quantity`: one number returns the order object; several return a JSON array of order objects; if ordering stops part-way, an object with the orders bought so far under `\"0\"`, `\"1\"`, ... plus `message`.  With `response=v2` every case returns the same object:  - `success`: 1 when every requested number was ordered, otherwise 0 - `orders`: the orders that were placed (may be empty) - `failed`: the error that stopped the request, as a one-element list (empty on success) - `message`: a summary - `auto_country`: only with `auto_country=1`, the chosen country  `response=v2` is ignored together with `create_token=1`.  ### Pool  `pool` is a pool ID or name from the `Pool List` endpoint. A name that does not exist answers 400 with `type: INVALID_POOL`. Leave it out (or send it empty or `0`) for any pool.  ### Retrying safely  Send an `Idempotency-Key` header so a retry after a timeout cannot buy twice.
      * Order SMS
      */
     purchaseSms(requestParameters: PurchaseSmsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
@@ -359,6 +400,34 @@ export interface SMSApiInterface {
     requestHistory(requestParameters: RequestHistoryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
     /**
+     * Creates request options for requestHistorySearch without sending the request
+     * @param {string} search The search term, as typed into the order history\\\&#39;s search box. At most 32 characters.
+     * @param {string} [cursor] &#x60;next&#x60; from the previous call. Leave out for the first call.
+     * @param {number} [limit] Matches per call, 1 to 500 (default 100).
+     * @throws {RequiredError}
+     * @memberof SMSApiInterface
+     */
+    requestHistorySearchRequestOpts(requestParameters: RequestHistorySearchRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * One step of a search through your order history, newest orders first. Each call reads a bounded slice of your orders and returns the matches in it plus `next`. Pass `next` back as `cursor` to continue; the search is complete when `next` is `null`. A call can return no matches and still have a `next`.
+     * @summary Search order history
+     * @param {string} search The search term, as typed into the order history\\\&#39;s search box. At most 32 characters.
+     * @param {string} [cursor] &#x60;next&#x60; from the previous call. Leave out for the first call.
+     * @param {number} [limit] Matches per call, 1 to 500 (default 100).
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SMSApiInterface
+     */
+    requestHistorySearchRaw(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * One step of a search through your order history, newest orders first. Each call reads a bounded slice of your orders and returns the matches in it plus `next`. Pass `next` back as `cursor` to continue; the search is complete when `next` is `null`. A call can return no matches and still have a `next`.
+     * Search order history
+     */
+    requestHistorySearch(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
+
+    /**
      * Creates request options for smsActivate without sending the request
      * @param {string} orderid 
      * @throws {RequiredError}
@@ -393,7 +462,7 @@ export interface SMSApiInterface {
     smsAllStockRequestOpts(requestParameters: SmsAllStockRequest): Promise<runtime.RequestOpts>;
 
     /**
-     * This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to `https://api.smspool.net/sms/stock`.  ### Request Parameters  The \\`key\\` parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - `success` (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - `message` (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+     * Retrieves the one-time SMS stock for every country, service and pool, optionally filtered by `country`, `service` and `pool`. The API key is optional.  The unfiltered list is large and rebuilt once a minute. It is sent with `ETag`, `Last-Modified` and `Cache-Control` headers: send `If-None-Match` (or `If-Modified-Since`) with your next request and you get `304 Not Modified` with no body while the list has not changed.
      * @summary One-time stock for all services
      * @param {string} [country] Country retrieved from \\\&#39;\\\&#39;Country list\\\&quot; endpoint (optional)
      * @param {string} [service] Service retrieved from \\\&#39;\\\&#39;Service list\\\&quot; endpoint (optional)
@@ -405,10 +474,34 @@ export interface SMSApiInterface {
     smsAllStockRaw(requestParameters: SmsAllStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
-     * This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to `https://api.smspool.net/sms/stock`.  ### Request Parameters  The \\`key\\` parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - `success` (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - `message` (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+     * Retrieves the one-time SMS stock for every country, service and pool, optionally filtered by `country`, `service` and `pool`. The API key is optional.  The unfiltered list is large and rebuilt once a minute. It is sent with `ETag`, `Last-Modified` and `Cache-Control` headers: send `If-None-Match` (or `If-Modified-Since`) with your next request and you get `304 Not Modified` with no body while the list has not changed.
      * One-time stock for all services
      */
     smsAllStock(requestParameters: SmsAllStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
+
+    /**
+     * Creates request options for smsArchive without sending the request
+     * @param {string} orderid The order code from the &#x60;Order SMS&#x60; endpoint.
+     * @throws {RequiredError}
+     * @memberof SMSApiInterface
+     */
+    smsArchiveRequestOpts(requestParameters: SmsArchiveRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Removes one finished order from your active orders. Nothing is refunded and the order stays in your history; `/sms/unarchive` brings it back. An order that is still waiting for an SMS cannot be archived: cancel it with `/sms/cancel` instead.
+     * @summary Archive one order
+     * @param {string} orderid The order code from the &#x60;Order SMS&#x60; endpoint.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SMSApiInterface
+     */
+    smsArchiveRaw(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * Removes one finished order from your active orders. Nothing is refunded and the order stays in your history; `/sms/unarchive` brings it back. An order that is still waiting for an SMS cannot be archived: cancel it with `/sms/cancel` instead.
+     * Archive one order
+     */
+    smsArchive(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
     /**
      * Creates request options for smsCancel without sending the request
@@ -422,7 +515,7 @@ export interface SMSApiInterface {
     smsCancelRequestOpts(requestParameters: SmsCancelRequest): Promise<runtime.RequestOpts>;
 
     /**
-     * # Cancel your SMS order  ## Responses  | **Success** | {\"success\":1} | | **Fail** | {\"success\":0} |
+     * Cancels an order. An order that has not received a code is cancelled and refunded. An order that already has its code cannot be refunded; it is only archived (removed from your active orders).  Both answer `success: 1`; `action` tells them apart: `refunded` or `archived`.  Send `orderids` (comma-separated) to cancel several orders at once; the response then lists one result per order under `results`.
      * @summary Cancel SMS
      * @param {string} [orderid] 
      * @param {string} [orderids] 
@@ -435,7 +528,7 @@ export interface SMSApiInterface {
     smsCancelRaw(requestParameters: SmsCancelRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
-     * # Cancel your SMS order  ## Responses  | **Success** | {\"success\":1} | | **Fail** | {\"success\":0} |
+     * Cancels an order. An order that has not received a code is cancelled and refunded. An order that already has its code cannot be refunded; it is only archived (removed from your active orders).  Both answer `success: 1`; `action` tells them apart: `refunded` or `archived`.  Send `orderids` (comma-separated) to cancel several orders at once; the response then lists one result per order under `results`.
      * Cancel SMS
      */
     smsCancel(requestParameters: SmsCancelRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
@@ -542,7 +635,7 @@ export interface SMSApiInterface {
     smsMissedRequestOpts(requestParameters: SmsMissedRequest): Promise<runtime.RequestOpts>;
 
     /**
-     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
+     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
      * @summary Missed SMS
      * @param {number} [phonenumber] Only return messages for this number, including the country code. Leave it out for all your numbers.
      * @param {number} [limit] Maximum number of messages. Defaults to 100, at most 500.
@@ -553,7 +646,7 @@ export interface SMSApiInterface {
     smsMissedRaw(requestParameters: SmsMissedRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
-     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
+     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
      * Missed SMS
      */
     smsMissed(requestParameters: SmsMissedRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
@@ -618,7 +711,7 @@ export interface SMSApiInterface {
     smsStockRequestOpts(requestParameters: SmsStockRequest): Promise<runtime.RequestOpts>;
 
     /**
-     * This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to `https://api.smspool.net/sms/stock`.  ### Request Parameters  The \\`key\\` parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - `success` (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - `message` (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+     * Retrieves the one-time SMS stock for a country and service, optionally for one pool.  ### Request Parameters  The API key is optional. Without it the request is limited to 20 calls a minute per IP address; with it the limit is 200 a minute.  ### Response  - `success` (integer): 1 when the stock could be read, 0 otherwise. - `amount` (integer): the numbers in stock.
      * @summary One-time SMS stock
      * @param {string} country Country retrieved from \\\&#39;\\\&#39;Country list\\\&quot; endpoint
      * @param {string} service Service retrieved from \\\&#39;\\\&#39;Service list\\\&quot; endpoint
@@ -631,7 +724,7 @@ export interface SMSApiInterface {
     smsStockRaw(requestParameters: SmsStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
-     * This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to `https://api.smspool.net/sms/stock`.  ### Request Parameters  The \\`key\\` parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - `success` (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - `message` (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+     * Retrieves the one-time SMS stock for a country and service, optionally for one pool.  ### Request Parameters  The API key is optional. Without it the request is limited to 20 calls a minute per IP address; with it the limit is 200 a minute.  ### Response  - `success` (integer): 1 when the stock could be read, 0 otherwise. - `amount` (integer): the numbers in stock.
      * One-time SMS stock
      */
     smsStock(requestParameters: SmsStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
@@ -681,6 +774,10 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -752,6 +849,14 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
             formParams.append('phonenumber', requestParameters['phonenumber'] as any);
         }
 
+        if (requestParameters['autoCountry'] != null) {
+            formParams.append('auto_country', requestParameters['autoCountry'] as any);
+        }
+
+        if (requestParameters['response'] != null) {
+            formParams.append('response', requestParameters['response'] as any);
+        }
+
         if (requestParameters['software'] != null) {
             formParams.append('software', requestParameters['software'] as any);
         }
@@ -769,6 +874,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
+     * Orders one or more numbers for a service.  ### Response shapes  Without `response=v2` the shape depends on `quantity`: one number returns the order object; several return a JSON array of order objects; if ordering stops part-way, an object with the orders bought so far under `\"0\"`, `\"1\"`, ... plus `message`.  With `response=v2` every case returns the same object:  - `success`: 1 when every requested number was ordered, otherwise 0 - `orders`: the orders that were placed (may be empty) - `failed`: the error that stopped the request, as a one-element list (empty on success) - `message`: a summary - `auto_country`: only with `auto_country=1`, the chosen country  `response=v2` is ignored together with `create_token=1`.  ### Pool  `pool` is a pool ID or name from the `Pool List` endpoint. A name that does not exist answers 400 with `type: INVALID_POOL`. Leave it out (or send it empty or `0`) for any pool.  ### Retrying safely  Send an `Idempotency-Key` header so a retry after a timeout cannot buy twice.
      * Order SMS
      */
     async purchaseSmsRaw(requestParameters: PurchaseSmsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -783,6 +889,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
+     * Orders one or more numbers for a service.  ### Response shapes  Without `response=v2` the shape depends on `quantity`: one number returns the order object; several return a JSON array of order objects; if ordering stops part-way, an object with the orders bought so far under `\"0\"`, `\"1\"`, ... plus `message`.  With `response=v2` every case returns the same object:  - `success`: 1 when every requested number was ordered, otherwise 0 - `orders`: the orders that were placed (may be empty) - `failed`: the error that stopped the request, as a one-element list (empty on success) - `message`: a summary - `auto_country`: only with `auto_country=1`, the chosen country  `response=v2` is ignored together with `create_token=1`.  ### Pool  `pool` is a pool ID or name from the `Pool List` endpoint. A name that does not exist answers 400 with `type: INVALID_POOL`. Leave it out (or send it empty or `0`) for any pool.  ### Retrying safely  Send an `Idempotency-Key` header so a retry after a timeout cannot buy twice.
      * Order SMS
      */
     async purchaseSms(requestParameters: PurchaseSmsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
@@ -921,6 +1028,14 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const consumes: runtime.Consume[] = [
             { contentType: 'application/x-www-form-urlencoded' },
         ];
@@ -1060,6 +1175,91 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
+     * Creates request options for requestHistorySearch without sending the request
+     */
+    async requestHistorySearchRequestOpts(requestParameters: RequestHistorySearchRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['search'] == null) {
+            throw new runtime.RequiredError(
+                'search',
+                'Required parameter "search" was null or undefined when calling requestHistorySearch().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const consumes: runtime.Consume[] = [
+            { contentType: 'application/x-www-form-urlencoded' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['search'] != null) {
+            formParams.append('search', requestParameters['search'] as any);
+        }
+
+        if (requestParameters['cursor'] != null) {
+            formParams.append('cursor', requestParameters['cursor'] as any);
+        }
+
+        if (requestParameters['limit'] != null) {
+            formParams.append('limit', requestParameters['limit'] as any);
+        }
+
+
+        let urlPath = `/request/history_search`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * One step of a search through your order history, newest orders first. Each call reads a bounded slice of your orders and returns the matches in it plus `next`. Pass `next` back as `cursor` to continue; the search is complete when `next` is `null`. A call can return no matches and still have a `next`.
+     * Search order history
+     */
+    async requestHistorySearchRaw(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.requestHistorySearchRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * One step of a search through your order history, newest orders first. Each call reads a bounded slice of your orders and returns the matches in it plus `next`. Pass `next` back as `cursor` to continue; the search is complete when `next` is `null`. A call can return no matches and still have a `next`.
+     * Search order history
+     */
+    async requestHistorySearch(requestParameters: RequestHistorySearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.requestHistorySearchRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for smsActivate without sending the request
      */
     async smsActivateRequestOpts(requestParameters: SmsActivateRequest): Promise<runtime.RequestOpts> {
@@ -1183,7 +1383,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to `https://api.smspool.net/sms/stock`.  ### Request Parameters  The \\`key\\` parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - `success` (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - `message` (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+     * Retrieves the one-time SMS stock for every country, service and pool, optionally filtered by `country`, `service` and `pool`. The API key is optional.  The unfiltered list is large and rebuilt once a minute. It is sent with `ETag`, `Last-Modified` and `Cache-Control` headers: send `If-None-Match` (or `If-Modified-Since`) with your next request and you get `304 Not Modified` with no body while the list has not changed.
      * One-time stock for all services
      */
     async smsAllStockRaw(requestParameters: SmsAllStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -1198,11 +1398,88 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to `https://api.smspool.net/sms/stock`.  ### Request Parameters  The \\`key\\` parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - `success` (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - `message` (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+     * Retrieves the one-time SMS stock for every country, service and pool, optionally filtered by `country`, `service` and `pool`. The API key is optional.  The unfiltered list is large and rebuilt once a minute. It is sent with `ETag`, `Last-Modified` and `Cache-Control` headers: send `If-None-Match` (or `If-Modified-Since`) with your next request and you get `304 Not Modified` with no body while the list has not changed.
      * One-time stock for all services
      */
     async smsAllStock(requestParameters: SmsAllStockRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
         const response = await this.smsAllStockRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for smsArchive without sending the request
+     */
+    async smsArchiveRequestOpts(requestParameters: SmsArchiveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['orderid'] == null) {
+            throw new runtime.RequiredError(
+                'orderid',
+                'Required parameter "orderid" was null or undefined when calling smsArchive().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const consumes: runtime.Consume[] = [
+            { contentType: 'application/x-www-form-urlencoded' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['orderid'] != null) {
+            formParams.append('orderid', requestParameters['orderid'] as any);
+        }
+
+
+        let urlPath = `/sms/archive`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * Removes one finished order from your active orders. Nothing is refunded and the order stays in your history; `/sms/unarchive` brings it back. An order that is still waiting for an SMS cannot be archived: cancel it with `/sms/cancel` instead.
+     * Archive one order
+     */
+    async smsArchiveRaw(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.smsArchiveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Removes one finished order from your active orders. Nothing is refunded and the order stays in your history; `/sms/unarchive` brings it back. An order that is still waiting for an SMS cannot be archived: cancel it with `/sms/cancel` instead.
+     * Archive one order
+     */
+    async smsArchive(requestParameters: SmsArchiveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.smsArchiveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -1265,7 +1542,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * # Cancel your SMS order  ## Responses  | **Success** | {\"success\":1} | | **Fail** | {\"success\":0} |
+     * Cancels an order. An order that has not received a code is cancelled and refunded. An order that already has its code cannot be refunded; it is only archived (removed from your active orders).  Both answer `success: 1`; `action` tells them apart: `refunded` or `archived`.  Send `orderids` (comma-separated) to cancel several orders at once; the response then lists one result per order under `results`.
      * Cancel SMS
      */
     async smsCancelRaw(requestParameters: SmsCancelRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -1280,7 +1557,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * # Cancel your SMS order  ## Responses  | **Success** | {\"success\":1} | | **Fail** | {\"success\":0} |
+     * Cancels an order. An order that has not received a code is cancelled and refunded. An order that already has its code cannot be refunded; it is only archived (removed from your active orders).  Both answer `success: 1`; `action` tells them apart: `refunded` or `archived`.  Send `orderids` (comma-separated) to cancel several orders at once; the response then lists one result per order under `results`.
      * Cancel SMS
      */
     async smsCancel(requestParameters: SmsCancelRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
@@ -1595,7 +1872,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
+     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
      * Missed SMS
      */
     async smsMissedRaw(requestParameters: SmsMissedRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -1610,7 +1887,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes or Hark reward payouts. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
+     * Some messages arrive on a number from your one-time orders but cannot finish the order, such as Ticketmaster and Seated codes, Hark reward payouts or Neon Money Talks messages. This returns those messages, the same ones the Missed SMS tool on the website shows. Only numbers from pool Foxtrot are covered.  The newest messages come first. `url`, `code` and `email` hold the first link, code and email address found in the message, or an empty string.
      * Missed SMS
      */
     async smsMissed(requestParameters: SmsMissedRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
@@ -1837,7 +2114,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to `https://api.smspool.net/sms/stock`.  ### Request Parameters  The \\`key\\` parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - `success` (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - `message` (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+     * Retrieves the one-time SMS stock for a country and service, optionally for one pool.  ### Request Parameters  The API key is optional. Without it the request is limited to 20 calls a minute per IP address; with it the limit is 200 a minute.  ### Response  - `success` (integer): 1 when the stock could be read, 0 otherwise. - `amount` (integer): the numbers in stock.
      * One-time SMS stock
      */
     async smsStockRaw(requestParameters: SmsStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -1852,7 +2129,7 @@ export class SMSApi extends runtime.BaseAPI implements SMSApiInterface {
     }
 
     /**
-     * This API endpoint is used to retrieve one-time SMS stock in the SMSPool system. The HTTP POST request should be sent to `https://api.smspool.net/sms/stock`.  ### Request Parameters  The \\`key\\` parameter is required for this endpoint, this is your API key.  ### Response  The response for this API endpoint will have a status code of 200, indicating a successful request. The response body will be in JSON format and will contain the following properties:  - `success` (integer): A flag indicating the success of the request. A value of 0 indicates failure.      - `message` (string): An optional message providing additional information about the request. In this case, the message is empty.       Please note that the response may contain additional properties not mentioned here, but they can be ignored for the purpose of this documentation.
+     * Retrieves the one-time SMS stock for a country and service, optionally for one pool.  ### Request Parameters  The API key is optional. Without it the request is limited to 20 calls a minute per IP address; with it the limit is 200 a minute.  ### Response  - `success` (integer): 1 when the stock could be read, 0 otherwise. - `amount` (integer): the numbers in stock.
      * One-time SMS stock
      */
     async smsStock(requestParameters: SmsStockRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {

@@ -25,7 +25,7 @@ All URIs are relative to *https://api.smspool.net*
 
 ## purchaseRental
 
-> any purchaseRental(id, days, serviceId, createToken, city, state, zipcode)
+> any purchaseRental(id, days, idempotencyKey, serviceId, createToken, city, state, zipcode)
 
 Order Rental
 
@@ -51,6 +51,8 @@ async function example() {
     id: 56,
     // number
     days: 56,
+    // string (optional)
+    idempotencyKey: 3f1c2c0e-7d5b-4a52-9a53-1f6f0f0f2b11,
     // number | Optional value on which service you\\\'d purchase the rental for (optional)
     serviceId: 56,
     // number | Create a rental token which allows you to share this specific rental (optional)
@@ -82,6 +84,7 @@ example().catch(console.error);
 |------------- | ------------- | ------------- | -------------|
 | **id** | `number` | Rental ID retrieved from Retrieve Rental IDs | [Defaults to `undefined`] |
 | **days** | `number` |  | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |  | [Optional] [Defaults to `undefined`] |
 | **serviceId** | `number` | Optional value on which service you\\\&#39;d purchase the rental for | [Optional] [Defaults to `undefined`] |
 | **createToken** | `number` | Create a rental token which allows you to share this specific rental | [Optional] [Defaults to `undefined`] |
 | **city** | `string` |  | [Optional] [Defaults to `undefined`] |
@@ -109,6 +112,7 @@ example().catch(console.error);
 | **400** | Error |  -  |
 | **401** | Malformed API key |  -  |
 | **403** | Unknown or revoked API key |  -  |
+| **409** | Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
@@ -747,6 +751,8 @@ This endpoint does not need any parameter.
 
 Retrieve Rental Messages
 
+Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
+
 ### Example
 
 ```ts
@@ -952,6 +958,8 @@ No authorization required
 
 Retrieve Rental Status
 
+Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
+
 ### Example
 
 ```ts
@@ -1111,7 +1119,11 @@ import type { RentalStockRequest } from '@smspool/sdk';
 
 async function example() {
   console.log("🚀 Testing @smspool/sdk SDK...");
-  const api = new RentalApi();
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new RentalApi(config);
 
   const body = {
     // number | The rental ID retrieved from `Retrieve Rental IDs`
@@ -1149,7 +1161,7 @@ example().catch(console.error);
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -1161,6 +1173,8 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | OK |  -  |
+| **401** | Malformed API key |  -  |
+| **403** | Unknown or revoked API key |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
