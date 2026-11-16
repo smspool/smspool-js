@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * SMSPool API
- * Every endpoint accepts its parameters as form fields (POST) or query parameters (GET).  Authenticate with your API key from https://www.smspool.net/my/settings, either as a bearer token (`Authorization: Bearer <key>`) or as a `key` parameter.
+ * Every endpoint accepts its parameters as form fields (POST) or query parameters (GET). A JSON object body (`Content-Type: application/json`) works too: its top-level fields are read as parameters; a parameter that is also in the query string or form body wins.  Authenticate with your API key from https://www.smspool.net/my/settings as a bearer token: `Authorization: Bearer <key>`. A `key` field in a POST body works too. Keep the key out of the URL: a URL is saved in browser history and can be recorded by proxies and logs on the way to us.  Use of the API is subject to the [Terms of Service](https://www.smspool.net/tos#api). Article 11 covers API use: sanctions and geographic restrictions, what you must require of your own users if you resell the service, and the safekeeping of keys.  ## Errors  An error answers with `success: 0`, a human-readable `message` and, where the API can name the cause, a machine-readable `type`. Check `type`, not the text of `message`. Parameter and key errors also carry `errors`, one entry per problem (`message`, `param`, `type`); the top-level `message` and `type` repeat the API key\'s entry when there is one, otherwise the first.  | `type` | HTTP | Meaning | | --- | --- | --- | | `MISSING_PARAMETER` | 400 | A required parameter was not sent | | `INVALID_PARAMETER` | varies | A parameter has a value the endpoint cannot use | | `INVALID_POOL` | 400 | `/purchase/sms`: the `pool` name does not exist | | `INVALID_KEY` | 401 / 403 | The API key is malformed (401) or unknown or revoked (403) | | `API_KEY_SCOPE` | 403 | The API key is not allowed to call this endpoint, or not from this IP address | | `RATE_LIMITED` | 429 | Too many requests; wait for the `Retry-After` header\'s seconds | | `IDEMPOTENCY_IN_PROGRESS` | 409 | The first request with this `Idempotency-Key` has not finished |  Endpoints add their own types (for example `OUT_OF_STOCK`). Older errors may have no `type`.  ## Idempotent purchases  `/purchase/sms`, `/purchase/rental`, `/esim/purchase` and `/voucher/generate` accept an optional `Idempotency-Key` header (or an `idempotency_key` parameter): 1 to 128 printable ASCII characters that you choose, unique per purchase, for example a UUID. If a request times out, send it again with the same key:  - the first request runs normally; - a repeat within 24 hours answers with the first request\'s status and body and the header `Idempotent-Replay: true`, and buys nothing; - a repeat while the first is still running answers `409` with `type: IDEMPOTENCY_IN_PROGRESS`; retry shortly.  A request that bought nothing (`success: 0`) does not use up its key, so it can be retried with the same one. A key belongs to your account and the endpoint. Requests without a key behave as they always have.  ## Webhooks  Instead of polling `/sms/check`, set a webhook URL under Settings → Developer and receive each SMS as a signed JSON `POST`. The events are listed under Webhooks below; setup, retries and signature checks are described in [How to set up webhooks](https://www.smspool.net/article/how-to-setup-webhooks-for-smspool-ec19b80ade92).  ## Health check  `GET /up` needs no key and answers `200 {\"status\":\"ok\",...}` or `503 {\"status\":\"degraded\",...}`.
  *
  * The version of the OpenAPI document: 1.0
  * 
@@ -23,6 +23,10 @@ export interface PurchaseRentalRequest {
      * 
      */
     days: number;
+    /**
+     * 
+     */
+    idempotencyKey?: string;
     /**
      * Optional value on which service you\'d purchase the rental for
      */
@@ -160,6 +164,7 @@ export interface RentalApiInterface {
      * Creates request options for purchaseRental without sending the request
      * @param {number} id Rental ID retrieved from Retrieve Rental IDs
      * @param {number} days 
+     * @param {string} [idempotencyKey] 
      * @param {number} [serviceId] Optional value on which service you\\\&#39;d purchase the rental for
      * @param {number} [createToken] Create a rental token which allows you to share this specific rental
      * @param {string} [city] 
@@ -175,6 +180,7 @@ export interface RentalApiInterface {
      * @summary Order Rental
      * @param {number} id Rental ID retrieved from Retrieve Rental IDs
      * @param {number} days 
+     * @param {string} [idempotencyKey] 
      * @param {number} [serviceId] Optional value on which service you\\\&#39;d purchase the rental for
      * @param {number} [createToken] Create a rental token which allows you to share this specific rental
      * @param {string} [city] 
@@ -408,7 +414,7 @@ export interface RentalApiInterface {
     rentalRetrieveMessagesRequestOpts(requestParameters: RentalRetrieveMessagesRequest): Promise<runtime.RequestOpts>;
 
     /**
-     * 
+     * Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
      * @summary Retrieve Rental Messages
      * @param {string} rentalCode The retrieved rental code from the &#x60;Order rental&#x60; endpoint.
      * @param {*} [options] Override http request option.
@@ -418,6 +424,7 @@ export interface RentalApiInterface {
     rentalRetrieveMessagesRaw(requestParameters: RentalRetrieveMessagesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
+     * Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
      * Retrieve Rental Messages
      */
     rentalRetrieveMessages(requestParameters: RentalRetrieveMessagesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
@@ -479,7 +486,7 @@ export interface RentalApiInterface {
     rentalRetrieveStatusRequestOpts(requestParameters: RentalRetrieveStatusRequest): Promise<runtime.RequestOpts>;
 
     /**
-     * 
+     * Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
      * @summary Retrieve Rental Status
      * @param {string} rentalCode The retrieved rental code from the &#x60;Order rental&#x60; endpoint.
      * @param {*} [options] Override http request option.
@@ -489,6 +496,7 @@ export interface RentalApiInterface {
     rentalRetrieveStatusRaw(requestParameters: RentalRetrieveStatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
+     * Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
      * Retrieve Rental Status
      */
     rentalRetrieveStatus(requestParameters: RentalRetrieveStatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
@@ -574,6 +582,10 @@ export class RentalApi extends runtime.BaseAPI implements RentalApiInterface {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -1323,6 +1335,7 @@ export class RentalApi extends runtime.BaseAPI implements RentalApiInterface {
     }
 
     /**
+     * Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
      * Retrieve Rental Messages
      */
     async rentalRetrieveMessagesRaw(requestParameters: RentalRetrieveMessagesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -1337,6 +1350,7 @@ export class RentalApi extends runtime.BaseAPI implements RentalApiInterface {
     }
 
     /**
+     * Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
      * Retrieve Rental Messages
      */
     async rentalRetrieveMessages(requestParameters: RentalRetrieveMessagesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
@@ -1529,6 +1543,7 @@ export class RentalApi extends runtime.BaseAPI implements RentalApiInterface {
     }
 
     /**
+     * Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
      * Retrieve Rental Status
      */
     async rentalRetrieveStatusRaw(requestParameters: RentalRetrieveStatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -1543,6 +1558,7 @@ export class RentalApi extends runtime.BaseAPI implements RentalApiInterface {
     }
 
     /**
+     * Successful answers are cached for 3 seconds per rental, so polling faster than that returns the same data.
      * Retrieve Rental Status
      */
     async rentalRetrieveStatus(requestParameters: RentalRetrieveStatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
@@ -1660,6 +1676,14 @@ export class RentalApi extends runtime.BaseAPI implements RentalApiInterface {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const consumes: runtime.Consume[] = [
             { contentType: 'application/x-www-form-urlencoded' },
         ];

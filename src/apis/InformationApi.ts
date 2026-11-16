@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * SMSPool API
- * Every endpoint accepts its parameters as form fields (POST) or query parameters (GET).  Authenticate with your API key from https://www.smspool.net/my/settings, either as a bearer token (`Authorization: Bearer <key>`) or as a `key` parameter.
+ * Every endpoint accepts its parameters as form fields (POST) or query parameters (GET). A JSON object body (`Content-Type: application/json`) works too: its top-level fields are read as parameters; a parameter that is also in the query string or form body wins.  Authenticate with your API key from https://www.smspool.net/my/settings as a bearer token: `Authorization: Bearer <key>`. A `key` field in a POST body works too. Keep the key out of the URL: a URL is saved in browser history and can be recorded by proxies and logs on the way to us.  Use of the API is subject to the [Terms of Service](https://www.smspool.net/tos#api). Article 11 covers API use: sanctions and geographic restrictions, what you must require of your own users if you resell the service, and the safekeeping of keys.  ## Errors  An error answers with `success: 0`, a human-readable `message` and, where the API can name the cause, a machine-readable `type`. Check `type`, not the text of `message`. Parameter and key errors also carry `errors`, one entry per problem (`message`, `param`, `type`); the top-level `message` and `type` repeat the API key\'s entry when there is one, otherwise the first.  | `type` | HTTP | Meaning | | --- | --- | --- | | `MISSING_PARAMETER` | 400 | A required parameter was not sent | | `INVALID_PARAMETER` | varies | A parameter has a value the endpoint cannot use | | `INVALID_POOL` | 400 | `/purchase/sms`: the `pool` name does not exist | | `INVALID_KEY` | 401 / 403 | The API key is malformed (401) or unknown or revoked (403) | | `API_KEY_SCOPE` | 403 | The API key is not allowed to call this endpoint, or not from this IP address | | `RATE_LIMITED` | 429 | Too many requests; wait for the `Retry-After` header\'s seconds | | `IDEMPOTENCY_IN_PROGRESS` | 409 | The first request with this `Idempotency-Key` has not finished |  Endpoints add their own types (for example `OUT_OF_STOCK`). Older errors may have no `type`.  ## Idempotent purchases  `/purchase/sms`, `/purchase/rental`, `/esim/purchase` and `/voucher/generate` accept an optional `Idempotency-Key` header (or an `idempotency_key` parameter): 1 to 128 printable ASCII characters that you choose, unique per purchase, for example a UUID. If a request times out, send it again with the same key:  - the first request runs normally; - a repeat within 24 hours answers with the first request\'s status and body and the header `Idempotent-Replay: true`, and buys nothing; - a repeat while the first is still running answers `409` with `type: IDEMPOTENCY_IN_PROGRESS`; retry shortly.  A request that bought nothing (`success: 0`) does not use up its key, so it can be retried with the same one. A key belongs to your account and the endpoint. Requests without a key behave as they always have.  ## Webhooks  Instead of polling `/sms/check`, set a webhook URL under Settings → Developer and receive each SMS as a signed JSON `POST`. The events are listed under Webhooks below; setup, retries and signature checks are described in [How to set up webhooks](https://www.smspool.net/article/how-to-setup-webhooks-for-smspool-ec19b80ade92).  ## Health check  `GET /up` needs no key and answers `200 {\"status\":\"ok\",...}` or `503 {\"status\":\"degraded\",...}`.
  *
  * The version of the OpenAPI document: 1.0
  * 
@@ -38,6 +38,17 @@ export interface PoolRetrieveValidRequest {
      * 
      */
     includeStock?: string;
+}
+
+export interface RequestAutoCountryRequest {
+    /**
+     * Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
+     */
+    service: string;
+    /**
+     * Set to 1 to prefer the cheapest country among those close to the best score; 0 (default) picks purely on the score.
+     */
+    pricingOption?: number;
 }
 
 export interface RequestSuccessRateRequest {
@@ -149,6 +160,32 @@ export interface InformationApiInterface {
     poolRetrieveValid(requestParameters: PoolRetrieveValidRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
     /**
+     * Creates request options for requestAutoCountry without sending the request
+     * @param {string} service Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
+     * @param {number} [pricingOption] Set to 1 to prefer the cheapest country among those close to the best score; 0 (default) picks purely on the score.
+     * @throws {RequiredError}
+     * @memberof InformationApiInterface
+     */
+    requestAutoCountryRequestOpts(requestParameters: RequestAutoCountryRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\'s \"Pick for me\"). It sends an HTTP POST request to the URL `https://api.smspool.net/request/auto_country`.  Every country with stock is scored on its expected success rate, weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\'s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With `pricing_option=1` the cheapest country within reach of the best score wins instead.  `success_rate` is that expected rate. Where the service has at least 20 recent orders in the country it is the measured rate and `rate_measured` is true. With fewer, it is an estimate that blends those orders (`rate_orders` of them) with how the country does across all services and how the service does elsewhere, and `rate_measured` is false.  Send `auto_country=1` to `/purchase/sms` to order with the same choice in one call.
+     * @summary Pick the best country for a service
+     * @param {string} service Service name or service ID which can be retrieved at the /service/retrieve_all endpoint
+     * @param {number} [pricingOption] Set to 1 to prefer the cheapest country among those close to the best score; 0 (default) picks purely on the score.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof InformationApiInterface
+     */
+    requestAutoCountryRaw(requestParameters: RequestAutoCountryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\'s \"Pick for me\"). It sends an HTTP POST request to the URL `https://api.smspool.net/request/auto_country`.  Every country with stock is scored on its expected success rate, weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\'s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With `pricing_option=1` the cheapest country within reach of the best score wins instead.  `success_rate` is that expected rate. Where the service has at least 20 recent orders in the country it is the measured rate and `rate_measured` is true. With fewer, it is an estimate that blends those orders (`rate_orders` of them) with how the country does across all services and how the service does elsewhere, and `rate_measured` is false.  Send `auto_country=1` to `/purchase/sms` to order with the same choice in one call.
+     * Pick the best country for a service
+     */
+    requestAutoCountry(requestParameters: RequestAutoCountryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
+
+    /**
      * Creates request options for requestBalance without sending the request
      * @throws {RequiredError}
      * @memberof InformationApiInterface
@@ -156,7 +193,7 @@ export interface InformationApiInterface {
     requestBalanceRequestOpts(): Promise<runtime.RequestOpts>;
 
     /**
-     * This HTTP POST request is used to retrieve the balance for a specific SMSPool. The request is sent to the URL `https://api.smspool.net/request/balance`.  ### Request Parameters  This request require the \\`key\\` param which is your API key  ### Response  The response to this request will have a status code of 200 if the request is successful. The response body will be in JSON format and will include a `balance` field. However, the last execution of this request returned an empty string for the `balance` field.  Please note that the actual value of the `balance` field may vary depending on the user and its configuration.
+     * Retrieves your account balance in USD.  ### Request Parameters  Only your API key, sent as a bearer token.  ### Response  A JSON object with a `balance` field: the balance as a string with two decimals, for example `\"5.00\"`.
      * @summary Balance
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -165,7 +202,7 @@ export interface InformationApiInterface {
     requestBalanceRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
-     * This HTTP POST request is used to retrieve the balance for a specific SMSPool. The request is sent to the URL `https://api.smspool.net/request/balance`.  ### Request Parameters  This request require the \\`key\\` param which is your API key  ### Response  The response to this request will have a status code of 200 if the request is successful. The response body will be in JSON format and will include a `balance` field. However, the last execution of this request returned an empty string for the `balance` field.  Please note that the actual value of the `balance` field may vary depending on the user and its configuration.
+     * Retrieves your account balance in USD.  ### Request Parameters  Only your API key, sent as a bearer token.  ### Response  A JSON object with a `balance` field: the balance as a string with two decimals, for example `\"5.00\"`.
      * Balance
      */
     requestBalance(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
@@ -430,6 +467,79 @@ export class InformationApi extends runtime.BaseAPI implements InformationApiInt
     }
 
     /**
+     * Creates request options for requestAutoCountry without sending the request
+     */
+    async requestAutoCountryRequestOpts(requestParameters: RequestAutoCountryRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['service'] == null) {
+            throw new runtime.RequiredError(
+                'service',
+                'Required parameter "service" was null or undefined when calling requestAutoCountry().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const consumes: runtime.Consume[] = [
+            { contentType: 'application/x-www-form-urlencoded' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['service'] != null) {
+            formParams.append('service', requestParameters['service'] as any);
+        }
+
+        if (requestParameters['pricingOption'] != null) {
+            formParams.append('pricing_option', requestParameters['pricingOption'] as any);
+        }
+
+
+        let urlPath = `/request/auto_country`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\'s \"Pick for me\"). It sends an HTTP POST request to the URL `https://api.smspool.net/request/auto_country`.  Every country with stock is scored on its expected success rate, weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\'s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With `pricing_option=1` the cheapest country within reach of the best score wins instead.  `success_rate` is that expected rate. Where the service has at least 20 recent orders in the country it is the measured rate and `rate_measured` is true. With fewer, it is an estimate that blends those orders (`rate_orders` of them) with how the country does across all services and how the service does elsewhere, and `rate_measured` is false.  Send `auto_country=1` to `/purchase/sms` to order with the same choice in one call.
+     * Pick the best country for a service
+     */
+    async requestAutoCountryRaw(requestParameters: RequestAutoCountryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.requestAutoCountryRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Returns the country SMSPool would order from for this service when you do not want to choose one (the quick order\'s \"Pick for me\"). It sends an HTTP POST request to the URL `https://api.smspool.net/request/auto_country`.  Every country with stock is scored on its expected success rate, weighed down when little stock backs it, minus a little per dollar, plus a bonus when it matches the country your request\'s IP resolves to (a local number verifies more often). The IP country is only used for that comparison; it is neither stored nor returned. Ties go to more stock, then the lower price. With `pricing_option=1` the cheapest country within reach of the best score wins instead.  `success_rate` is that expected rate. Where the service has at least 20 recent orders in the country it is the measured rate and `rate_measured` is true. With fewer, it is an estimate that blends those orders (`rate_orders` of them) with how the country does across all services and how the service does elsewhere, and `rate_measured` is false.  Send `auto_country=1` to `/purchase/sms` to order with the same choice in one call.
+     * Pick the best country for a service
+     */
+    async requestAutoCountry(requestParameters: RequestAutoCountryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.requestAutoCountryRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for requestBalance without sending the request
      */
     async requestBalanceRequestOpts(): Promise<runtime.RequestOpts> {
@@ -457,7 +567,7 @@ export class InformationApi extends runtime.BaseAPI implements InformationApiInt
     }
 
     /**
-     * This HTTP POST request is used to retrieve the balance for a specific SMSPool. The request is sent to the URL `https://api.smspool.net/request/balance`.  ### Request Parameters  This request require the \\`key\\` param which is your API key  ### Response  The response to this request will have a status code of 200 if the request is successful. The response body will be in JSON format and will include a `balance` field. However, the last execution of this request returned an empty string for the `balance` field.  Please note that the actual value of the `balance` field may vary depending on the user and its configuration.
+     * Retrieves your account balance in USD.  ### Request Parameters  Only your API key, sent as a bearer token.  ### Response  A JSON object with a `balance` field: the balance as a string with two decimals, for example `\"5.00\"`.
      * Balance
      */
     async requestBalanceRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -472,7 +582,7 @@ export class InformationApi extends runtime.BaseAPI implements InformationApiInt
     }
 
     /**
-     * This HTTP POST request is used to retrieve the balance for a specific SMSPool. The request is sent to the URL `https://api.smspool.net/request/balance`.  ### Request Parameters  This request require the \\`key\\` param which is your API key  ### Response  The response to this request will have a status code of 200 if the request is successful. The response body will be in JSON format and will include a `balance` field. However, the last execution of this request returned an empty string for the `balance` field.  Please note that the actual value of the `balance` field may vary depending on the user and its configuration.
+     * Retrieves your account balance in USD.  ### Request Parameters  Only your API key, sent as a bearer token.  ### Response  A JSON object with a `balance` field: the balance as a string with two decimals, for example `\"5.00\"`.
      * Balance
      */
     async requestBalance(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
